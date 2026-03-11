@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 30px 40px;
+            border-bottom: 1px solid #e8eaed;
+            margin: 0 -20px 30px -20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header h1 {
+            color: #1a1a1a;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .badge {
+            background: #2563eb;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5f6368;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: #f8f9fa;
+            border-color: #d0d0d0;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-label {
+            color: #5f6368;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #5f6368;
+        }
+
+        .filter-btn:hover {
+            background: #f8f9fa;
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        .filter-btn.active {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .notifications {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .notification {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .notification:hover {
+            background: #fafbfc;
+        }
+
+        .notification:last-child {
+            border-bottom: none;
+        }
+
+        .notification.unread {
+            background: #f8faff;
+        }
+
+        .notification.unread:hover {
+            background: #f0f5ff;
+        }
+
+        .notification.unread::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #2563eb;
+        }
+
+        .notification-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .icon-info {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+        .icon-success {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+        .icon-warning {
+            background: #fefce8;
+            color: #ca8a04;
+        }
+        .icon-error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .notification-message {
+            color: #5f6368;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .notification-time {
+            color: #9ca3af;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .notification-category {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .category-info {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .category-success {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .category-warning {
+            background: #fefce8;
+            color: #ca8a04;
+        }
+
+        .category-error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .category-task {
+            background: Green;
+            color: White;
+        }
+
+        .notification-dot {
+            width: 8px;
+            height: 8px;
+            background: #2563eb;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 72px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0;
+            }
+
+            .header {
+                padding: 20px;
+                margin: 0 0 20px 0;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                position: static;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .filters {
+                margin: 0 16px 20px 16px;
+                padding: 16px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .filter-label {
+                display: none;
+            }
+
+            .notifications {
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .notification {
+                padding: 16px;
+            }
+
+            .notification-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .notification-title {
+                font-size: 14px;
+            }
+
+            .notification-message {
+                font-size: 13px;
+            }
+
+            .notification-time {
+                font-size: 12px;
+            }
+
+            .empty-state {
+                padding: 60px 20px;
+            }
+
+            .empty-state-icon {
+                font-size: 56px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filters {
+                margin: 0 12px 16px 12px;
+            }
+
+            .notification-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body data-user-id="{{ username }}">
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Notifications</h1>
+                <span class="badge" id="notificationCount">0</span>
+            </div>
+            <div class="header-actions">
+                <button class="action-btn" id="markAllReadBtn">
+                    <span>✓</span> Mark all as read
+                </button>
+            </div>
+        </div>
+
+        <div class="filters">
+            <span class="filter-label">Filter:</span>
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="unread">Unread</button>
+            <button class="filter-btn" data-filter="info">Info</button>
+            <button class="filter-btn" data-filter="success">Success</button>
+            <button class="filter-btn" data-filter="warning">Warning</button>
+            <button class="filter-btn" data-filter="error">Error</button>
+            <button class="filter-btn" data-filter="task">Task</button>
+        </div>
+
+        <div class="notifications" id="notificationList"></div>
+    </div>
+
+    <script>
+        const ICON_MAP = {
+            info: 'ℹ️',
+            success: '✓',
+            warning: '⚠️',
+            error: '✕',
+            task: '📝'
+        };
+        user_id = document.body.dataset.userId || 'demo-user';
+        let notifications = [];
+        let currentFilter = 'all';
+
+        // Load notifications data function
+        async function fetch_notifications() {
+            try {
+                const noti = await fetch(`/fetch-notification/${user_id}`);
+                return noti.json()
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+            }
+        }
+
+        // for convert date time object into easy to understand string
+        function formatTimeAgo(isoDate) {
+            const date = new Date(isoDate);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            const intervals = [
+                { label: 'year', seconds: 31536000 },
+                { label: 'month', seconds: 2592000 },
+                { label: 'day', seconds: 86400 },
+                { label: 'hour', seconds: 3600 },
+                { label: 'minute', seconds: 60 }
+            ];
+
+            for (const interval of intervals) {
+                const count = Math.floor(seconds / interval.seconds);
+                if (count >= 1) {
+                    return `${count} ${interval.label}${count > 1 ? 's' : ''} ago`;
+                }
+            }
+            return 'Just now';
+        }
+
+        // use for getting icon for type of notifications
+        function getIcon(type) {
+            return ICON_MAP[type] || '🔔'; // fallback icon
+        }
+
+
+        // for displaying the notifications
+        function renderNotifications(filter = 'all') {
+            const notificationList = document.getElementById('notificationList');
+            let filteredNotifications = notifications;
+
+            if (filter === 'unread') {
+                filteredNotifications = notifications.filter(n => !n.is_read);
+            } else if (filter !== 'all') {
+                filteredNotifications = notifications.filter(n => n.type === filter);
+            }
+
+            if (filteredNotifications.length === 0) {
+                notificationList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-text">No notifications found</div>
+                    </div>
+                `;
+                return;
+            }
+
+            notificationList.innerHTML = filteredNotifications.map(notification => `
+                    <div class="notification ${!notification.is_read ? 'unread' : ''}" data-id="${notification.id}">
+                    <div class="notification-icon icon-${notification.type}">
+                        ${getIcon(notification.type)}
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-meta">
+                            <span class="notification-time">
+                                🕒 ${formatTimeAgo(notification.created_at)}
+                            </span>
+                            <span class="notification-category category-${notification.type}">
+                                ${notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}
+                            </span>
+                        </div>
+                    </div>
+                    ${!notification.is_read ? '<div class="notification-dot"></div>' : ''}
+                </div>
+            `).join('');
+
+            addNotificationListeners();
+        }
+
+        function addNotificationListeners() {
+            const notificationElements = document.querySelectorAll('.notification');
+            notificationElements.forEach(el => {
+                el.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.id);
+                    markAsRead(id);
+                });
+            });
+        }
+
+        function markAllAsRead() {
+            notifications.forEach(n => n.is_read = true);
+            updateUnreadCount();
+            renderNotifications(currentFilter);
+        }
+
+
+        function updateUnreadCount() {
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+            document.getElementById('notificationCount').textContent = unreadCount;
+        }
+
+        function markAsRead(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (notification && !notification.is_read) {
+                notification.is_read = true; // mark as READ
+                updateUnreadCount();
+                renderNotifications(currentFilter);
+            }
+        }
+
+        document.getElementById('markAllReadBtn').addEventListener('click', markAllAsRead);
+
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                renderNotifications(currentFilter);
+            });
+        });
+        async function loadNotifications() {
+            notifications = await fetch_notifications();
+            updateUnreadCount();
+            renderNotifications();
+        }
+        loadNotifications();
+    </script>
+</body>
+</html>

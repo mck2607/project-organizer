@@ -1,0 +1,105 @@
+:root {
+  --bg-color: #f5f7fa;
+  --text-color: #111;
+  --table-header: #007bff;
+  --table-row: #fff;
+  --accent: #007bff;
+  --link-color: #007bff;
+}
+
+body.dark {
+  --bg-color: #121212;
+  --text-color: #eee;
+  --table-header: #1f1f1f;
+  --table-row: #1e1e1e;
+  --accent: #0d6efd;
+  --link-color: #59bfff;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 20px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  background: var(--table-row);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  transition: background 0.3s;
+}
+
+h1 {
+  text-align: center;
+  color: var(--text-color);
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+th {
+  background-color: var(--table-header);
+  color: white;
+  padding: 12px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+td {
+  padding: 14px;
+  text-align: center;
+  background-color: var(--table-row);
+  transition: background-color 0.2s;
+}
+
+tr:hover td {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.assign-btn {
+  text-decoration: none;
+  background-color: var(--accent);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  display: inline-block;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+
+.assign-btn:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+.theme-toggle {
+  text-align: right;
+  margin-bottom: 10px;
+}
+
+.theme-toggle button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.theme-toggle button:hover {
+  background-color: #0056b3;
+}

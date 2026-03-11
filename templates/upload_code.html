@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/upload_code.css">
+</head>
+<body>
+  <div class="upload-container">
+    <div class="upload-card">
+      <h1>🎉 Upload Your Project Zip</h1>
+      <p>Earn rewards by submitting your complete project code!</p>
+      <form id="uploadForm" method="POST" enctype="multipart/form-data">
+        <div class="drop-zone" id="dropZone">
+          <span id="drop-text">📁 Drag & Drop ZIP here or click to select</span>
+          <input type="file" name="project_zip" id="project_zip" accept=".zip" hidden />
+        </div>
+        <input type="hidden" name="project_id" value="{{ user.project_id }}">
+        <input type="hidden" name="project_name" value="{{ user.project_name }}">
+        <input type="hidden" name="user_name" value="{{ user.name }}">
+        <input type="hidden" name="task_detail" value="{{ user.task_detail }}">
+        <input type="hidden" name="user_id"  value="{{ user.username }}">
+        <div id="file-name"></div>
+        <button type="submit">Upload 🚀</button>
+      </form>
+
+      <div id="spinner" class="hidden">⏳ Uploading...</div>
+      <div id="message"></div>
+    </div>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const input = document.getElementById('project_zip');
+    const fileNameDisplay = document.getElementById('file-name');
+    const form = document.getElementById('uploadForm');
+    const message = document.getElementById('message');
+    const spinner = document.getElementById('spinner');
+
+    dropZone.addEventListener('click', () => input.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        fileNameDisplay.innerText = `📦 ${input.files[0].name}`;
+      }
+    });
+
+    input.addEventListener('change', () => {
+      if (input.files.length) {
+        fileNameDisplay.innerText = `📦 ${input.files[0].name}`;
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = input.files[0];
+      if (!file) {
+        message.innerText = "❌ Please select a ZIP file.";
+        return;
+      }
+      if (!file.name.endsWith(".zip")) {
+        message.innerText = "❌ Only .zip files allowed.";
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024 * 1024) {
+        message.innerText = "❌ File must be < 2GB.";
+        return;
+      }
+
+      spinner.classList.remove("hidden");
+
+      const formData = new FormData(form);  // ⬅️ Includes all hidden fields too
+
+      const response = await fetch("/upload-code", {
+        method: "POST",
+        body: formData,
+      });
+
+      spinner.classList.add("hidden");
+      const result = await response.json();
+      message.innerText = result.message || "✅ Upload complete!";
+    });
+
+  </script>
+</body>
+</html>

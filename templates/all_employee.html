@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/all_employee.css">
+  <title>HR Employee Dashboard</title>
+</head>
+<body>
+  <div class="container">
+    <h2>Employee Directory</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Department</th>
+          <th>Email</th>
+          <th>View Profile</th>
+          <th>Edit Profile</th>
+        </tr>
+      </thead>
+      <tbody>
+          {% for developer in developers %}
+            <tr>
+              <td>{{ developer.name }}</td>
+              <td>{{ developer.position }}</td>
+              <td>{{ developer.department }}</td>
+              <td>{{ developer.email }}</td>
+              <td><a href="/profile/{{ developer.username }}" class="btn view">👀</a></td>
+              <td><a href="/update_profile_huhh/{{ developer.username }}" class="btn edit">📝</a></td>
+            </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

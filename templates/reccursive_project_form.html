@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Submission</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/reccursive_project.css">
+</head>
+<body>
+
+<div class="container">
+  {% if success %}
+    <div class="alert success">
+      ✅ Data uploaded successfully!.
+    </div>
+  {% endif %}
+
+  <div class="form-header">
+    <h1>📁 Project Organizer</h1>
+    <p>Actowiz Data Solutions</p>
+  </div>
+  <form method="post" action="/reassign-project-form-submit" class="form" enctype="multipart/form-data">
+    <div id="result" class="alert" style="display: none;"></div>
+    <!-- Section 1: Project Information -->
+    <section>
+      <h2>Project Information</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="project_name">Project Name <span class="required">*</span></label>
+          <input type="text" id="project_name" name="project_name" value="{{ details.project_name }}" readonly>
+        </div>
+      </div>
+    <div class="form-grid two-cols">
+      <div class="form-group">
+        <label for="project_assigner_email">Project Assigner Email</label>
+        <input type="email" id="project_assigner_email" name="project_assigner_email">
+      </div>
+      <div class="form-group">
+        <label for="assigned_person_email">Assignee Email <span class="required">*</span></label>
+        <input type="email" id="assigned_person_email" name="assigned_person_email" required>
+      </div>
+    </div>
+    <div class="form-grid two-cols">
+      <div class="form-group">
+        <label for="start_date_time">Project Start Date & Time <span class="required">*</span></label>
+        <input type="datetime-local" id="start_date_time" name="start_date_time" required>
+      </div>
+      <div class="form-group">
+        <label for="deadline_date_time">Project Deadline Date & Time <span class="required">*</span></label>
+        <input type="datetime-local" id="deadline_date_time" name="deadline_date_time" required>
+      </div>
+    </div>
+    </section>
+    <!-- Section 2: Platform & Frequency -->
+    <section>
+      <h2>Platform & Frequency</h2>
+      <div class="form-group">
+        <label for="platform_type">Platform Type <span class="required">*</span></label>
+        <select id="platform_type" name="platform_type" required>
+          <option value="">-- Select Platform Type --</option>
+          <option value="web_scraping">Web Scraping</option>
+          <option value="app_scraping">App Scraping</option>
+          <option value="dashboard">Dashboard</option>
+          <option value="web_app_both">Web & App Both</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="frequency_type">Frequency Type <span class="required">*</span></label>
+        <select id="frequency_type" name="frequency_type" required>
+          <option value="">-- Select Frequency Type --</option>
+          <option value="once-off">Once-Off</option>
+          <option value="monthly">Monthly</option>
+          <option value="weekly">Weekly</option>
+          <option value="alternate">Alternate</option>
+          <option value="daily">Daily</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Project Old/New</label>
+        <div class="radio-group">
+          <label for="project_state_new">
+            <input type="radio" id="project_state_new" name="project_state" value="new">
+            New
+          </label>
+          <label for="project_state_old">
+            <input type="radio" id="project_state_old" name="project_state" value="old">
+            Old
+          </label>
+        </div>
+      </div>
+    </section>
+    <!-- Section 3: Description and Uploads -->
+    <section>
+      <h2>Project Details</h2>
+      <div class="form-group">
+        <label for="project_description">Project Description</label>
+        <textarea id="project_description" name="project_description" rows="4" placeholder="Describe the project..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="project_files">Upload Project Files <span class="required">*</span></label>
+        <input type="file" id="project_files" name="project_files" accept=".pdf,.docx,.xlsx,.csv,.ppt" required>
+      </div>
+
+      <div class="form-group">
+        <label for="project_videos">Upload Project Video</label>
+        <input type="file" id="project_videos" name="project_videos" accept="video/*">
+      </div>
+    </section>
+    <!-- Section 4: Actions -->
+    <div class="form-actions">
+      <button type="reset" class="btn outline">Reset</button>
+      <button type="submit" class="btn">Submit</button>
+      <p class="note"><span class="required">*</span> Required fields</p>
+    </div>
+  </form>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("form");
+  const result = document.getElementById("result");
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch("/reassign-project-form-submit", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Form submission failed");
+
+      const data = await response.json();
+
+      result.textContent = data.message;
+      result.className = "alert success";
+      result.style.display = "block";
+
+      form.reset();
+    } catch (error) {
+      result.textContent = "Error submitting form.";
+      result.className = "alert error";
+      result.style.display = "block";
+    }
+  });
+});
+
+</script>
+</body>
+</html>

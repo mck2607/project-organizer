@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Send Communication</title>
+
+  <!-- Quill.js CSS -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .header h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .form-container {
+      padding: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Quill Editor Styling */
+    #editor-container {
+      min-height: 200px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      background: white;
+      transition: all 0.2s;
+    }
+
+    #editor-container:focus-within {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .ql-toolbar {
+      border: none !important;
+      border-bottom: 2px solid #e5e7eb !important;
+      background: #f9fafb;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .ql-container {
+      border: none !important;
+      font-size: 1rem;
+      min-height: 200px;
+    }
+
+    .ql-editor {
+      min-height: 200px;
+      padding: 1rem;
+    }
+
+    .ql-editor.ql-blank::before {
+      color: #9ca3af;
+      font-style: normal;
+    }
+
+    .char-count {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+
+    /* File Input Styling */
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      background: #f9fafb;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      color: #6b7280;
+    }
+
+    .file-input-label:hover {
+      border-color: #667eea;
+      background: #f3f4f6;
+      color: #667eea;
+    }
+
+    .file-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: #f3f4f6;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #374151;
+    }
+
+    .file-item button {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Alert Styling */
+    .alert {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .success {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+
+    .danger {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid white;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem 0.5rem;
+      }
+
+      .header {
+        padding: 1.5rem;
+      }
+
+      .header h2 {
+        font-size: 1.5rem;
+      }
+
+      .form-container {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>📊 Project Communication</h2>
+      <p>Share updates, requirements, and questions with your team</p>
+    </div>
+
+    <div class="form-container">
+      <form id="commForm" enctype="multipart/form-data">
+
+        <div class="form-group">
+          <label for="sending_type">Communication Type</label>
+          <select id="sending_type" name="sending_type" required>
+            <option value="update">📢 Update</option>
+            <option value="requirement">📋 Requirement</option>
+            <option value="doubt">❓ Doubt</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="message">Message</label>
+          <div id="editor-container"></div>
+          <div class="char-count"><span id="charCount">0</span> characters</div>
+        </div>
+
+        <div class="form-group">
+          <label for="sender_images">Attach Images (Optional)</label>
+          <div class="file-input-wrapper">
+            <input type="file" id="sender_images" name="sender_images" accept="image/*" multiple>
+            <label for="sender_images" class="file-input-label">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Click to upload images or drag and drop
+            </label>
+          </div>
+          <div class="file-preview" id="filePreview"></div>
+        </div>
+
+        <input type="hidden" id="sender_username" name="sender_username" value="{{ projects_details.assigned_person_username }}">
+        <input type="hidden" id="sender_name" name="sender_name" value="{{ projects_details.assigned_person_name }}">
+        <input type="hidden" id="receiver_username" name="receiver_username" value="{{ projects_details.person_assigner_username }}">
+        <input type="hidden" id="receiver_name" name="receiver_name" value="{{ projects_details.project_assigner_name }}">
+        <input type="hidden" id="project_id" name="project_id" value="{{ projects_details.project_id }}">
+        <input type="hidden" id="message" name="message">
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span class="btn-content">
+            <span id="btnText">Send Message</span>
+          </span>
+        </button>
+
+        <div id="alert-container"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Quill.js Script -->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+  <script>
+    // Initialize Quill editor
+    const quill = new Quill('#editor-container', {
+      theme: 'snow',
+      placeholder: 'Type your message here or paste formatted text from Slack, Notion, etc...',
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'color': [] }, { 'background': [] }],
+          ['link', 'code-block'],
+          ['clean']
+        ]
+      }
+    });
+
+    // Character count
+    quill.on('text-change', function() {
+      const text = quill.getText().trim();
+      document.getElementById('charCount').textContent = text.length;
+    });
+
+    // File input handling
+    const fileInput = document.getElementById('sender_images');
+    const filePreview = document.getElementById('filePreview');
+    let selectedFiles = [];
+
+    fileInput.addEventListener('change', function(e) {
+      const files = Array.from(e.target.files);
+      selectedFiles = [...selectedFiles, ...files];
+      updateFilePreview();
+    });
+
+    function updateFilePreview() {
+      filePreview.innerHTML = '';
+      selectedFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+          <span>📎 ${file.name}</span>
+          <button type="button" onclick="removeFile(${index})">×</button>
+        `;
+        filePreview.appendChild(fileItem);
+      });
+    }
+
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      updateFilePreview();
+
+      // Update file input
+      const dt = new DataTransfer();
+      selectedFiles.forEach(file => dt.items.add(file));
+      fileInput.files = dt.files;
+    }
+
+    // Form submission
+    document.getElementById('commForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+
+      // Get HTML content from Quill
+      const htmlContent = quill.root.innerHTML;
+
+      // Check if message is empty
+      if (quill.getText().trim().length === 0) {
+        showAlert('Please enter a message', false);
+        return;
+      }
+
+      // Set the hidden message field
+      document.getElementById('message').value = htmlContent;
+
+      const formData = new FormData(form);
+
+      // Remove default file input and add selected files
+      formData.delete('sender_images');
+      selectedFiles.forEach(file => {
+        formData.append('sender_images', file);
+      });
+
+      // Disable button and show loading
+      submitBtn.disabled = true;
+      btnText.innerHTML = '<span class="spinner"></span> Sending...';
+
+      try {
+        const response = await fetch('/send-communication', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        showAlert(result.message || 'Sent successfully!', result.success !== false);
+
+        if (result.success !== false) {
+          form.reset();
+          quill.setText('');
+          selectedFiles = [];
+          updateFilePreview();
+          document.getElementById('charCount').textContent = '0';
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert('Something went wrong. Please try again.', false);
+      } finally {
+        submitBtn.disabled = false;
+        btnText.textContent = 'Send Message';
+      }
+    });
+
+    // Submit on Ctrl/Cmd + Enter
+    quill.root.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        document.getElementById('commForm').dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    });
+
+    // Show alert
+    function showAlert(message, success) {
+      const container = document.getElementById('alert-container');
+      container.innerHTML = `
+        <div class="alert ${success ? 'success' : 'danger'}">
+          ${success ? '✅' : '❌'} ${message}
+        </div>
+      `;
+
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Sharing Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="/static/knowledge_hub_home.css" rel="stylesheet">
+    
+</head>
+<body class="dark-theme">
+    <div id="sidebarOverlay"></div>
+    <div class="container">
+        <div class="header">
+            <h2>📚 Knowledge Sharing Portal</h2>
+            <div class="user-info">
+                <span>Welcome, {{ user_initials }}</span>
+            </div>
+        </div>
+        <div class="content">
+            <div class="controls-bar">
+                <div class="filters-group">
+                    <div class="filter-item">
+                        <label>Category</label>
+                        <select id="filterCategory" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Categories</option>
+                            <option value="Blocking">Blocking</option>
+                            <option value="Other">Other</option>
+                            <option value="Documentation">Documentation</option>
+                            <option value="Developement">Developement</option>
+                            <option value="Api">Api</option>
+                            <option value="Database">Database</option>
+                            <option value="Automation">Automation</option>
+                            <option value="Research">Research</option>
+                            <option value="Updates">Updates</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>From Date</label>
+                        <input type="date" id="filterDateFrom" class="filter-input" onchange="applyFilters()">
+                    </div>
+                    <div class="filter-item">
+                        <label>To Date</label>
+                        <input type="date" id="filterDateTo" class="filter-input" onchange="applyFilters()">
+                    </div>
+                    
+                    <button class="add-post-btn" onclick="openUploadModal()">
+                        Add New Post
+                    </button>
+                    
+                </div>
+                <div class="theme-toggle" onclick="toggleTheme()">
+                    <span class="theme-icon" id="themeIcon">🌙</span>
+                    <span id="themeText">Dark Mode</span>
+                </div>
+            </div>
+            <div class="posts-section">
+                <h3>📚 Shared Knowledge</h3>
+                <div class="posts-grid" id="postsGrid">
+                    <div class="empty">Loading posts...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📤 Share Your Knowledge</h3>
+                <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+            </div>
+            <form class="upload-form" onsubmit="uploadFile(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="postTitle">Title *</label>
+                        <input type="text" id="postTitle" required placeholder="Enter title">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" required>
+                            <option value="">Select category</option>
+                            <option value="Blocking">Blocking</option>
+                            <option value="Other">Other</option>
+                            <option value="Documentation">Documentation</option>
+                            <option value="Developement">Developement</option>
+                            <option value="Api">Api</option>
+                            <option value="Database">Database</option>
+                            <option value="Automation">Automation</option>
+                            <option value="Research">Research</option>
+                            <option value="Updates">Updates</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description * (Use toolbar to format)</label>
+                    <div id="editor-container"></div>
+                </div>
+                <div class="form-group">
+                    <label>Upload File *</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" multiple onchange="updateFileName()">
+                        <label for="fileInput" class="file-input-label" id="fileLabel">
+                            📎 Choose file (PDF, DOC, Excel, Video, Code, ZIP, etc.)
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="upload-btn">Upload & Share</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Post Sidebar -->
+    <aside id="viewPostSidebar"></aside>
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script>
+        let posts = [];
+        let filteredPosts = [];
+        let quillEditor = null;
+
+        function initQuill() {
+            const editorContainer = document.getElementById('editor-container');
+            if (!editorContainer || quillEditor) return;
+
+            quillEditor = new Quill('#editor-container', {
+                theme: 'snow',
+                placeholder: 'Write description...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['link', 'code-block']
+                    ]
+                }
+            });
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+
+            body.classList.toggle('light-theme');
+            body.classList.toggle('dark-theme');
+
+            if (body.classList.contains('light-theme')) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+
+            if (savedTheme === 'light') {
+                body.classList.add('light-theme');
+                body.classList.remove('dark-theme');
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+            } else {
+                body.classList.add('dark-theme');
+                body.classList.remove('light-theme');
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+            }
+        }
+
+        function applyFilters() {
+            loadPosts();
+        }
+
+        function openUploadModal() {
+            const modal = document.getElementById("uploadModal");
+            modal.classList.add("show");
+            
+            if (!quillEditor) {
+                setTimeout(() => initQuill(), 100);
+            }
+        }
+
+        function closeUploadModal() {
+            const modal = document.getElementById("uploadModal");
+            modal.classList.remove("show");
+
+            document.getElementById('postTitle').value = "";
+            document.getElementById('category').value = "";
+            document.getElementById('fileInput').value = "";
+            document.getElementById('fileLabel').textContent = '📎 Choose file (PDF, DOC, Excel, Video, Code, ZIP, etc.)';
+
+            if (quillEditor) {
+                quillEditor.setContents([]);
+            }
+        }
+
+        function updateFileName() {
+            const input = document.getElementById('fileInput');
+            const label = document.getElementById('fileLabel');
+            if (input.files.length > 0) {
+                if (input.files.length === 1) {
+                    label.textContent = `📎 ${input.files[0].name}`;
+                } else {
+                    label.textContent = `📎 ${input.files.length} files selected`;
+                }
+            } else {
+                label.textContent = '📎 Choose file (PDF, DOC, Excel, Video, Code, ZIP, etc.)';
+            }
+        }
+
+        function openPostSidebar(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const sidebar = document.getElementById("viewPostSidebar");
+            const overlay = document.getElementById("sidebarOverlay");
+
+            const feedbacksHTML = post.feedbacks && post.feedbacks.length > 0 
+                ? post.feedbacks.map(fb => `
+                    <div class="feedback-item">
+                        <div class="feedback-author">${fb.author}</div>
+                        <div class="feedback-text">${fb.text}</div>
+                        <div class="feedback-date">${fb.date}</div>
+                    </div>
+                `).join('')
+                : '<div class="no-feedback">No feedback yet. Be the first to share your thoughts!</div>';
+
+            sidebar.innerHTML = `
+                <button class="sidebar-close" onclick="closePostSidebar()">×</button>
+                <div class="sidebar-content">
+                    <h2 class="sidebar-title">${post.title}</h2>
+                    
+                    <div class="sidebar-actions">
+                        ${post.files.length > 1 
+                            ? `<button class="action-btn download-btn" onclick="downloadAllFiles(${post.id})">
+                                📥 Download All (${post.files.length} files)
+                            </button>`
+                            : `<button class="action-btn download-btn" onclick="downloadFile(${post.files[0]?.id})">
+                                📥 Download
+                            </button>`
+                        }
+                        <button class="action-btn like-btn ${post.liked_by_me ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+                            ${post.liked_by_me ? '❤️' : '🤍'} Like
+                        </button>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Post Details</h4>
+                        <div class="post-detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Author:</div>
+                                <div class="detail-value">${post.author || 'Unknown'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Category:</div>
+                                <div class="detail-value">${post.category}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Date Shared:</div>
+                                <div class="detail-value">${post.date}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Likes:</div>
+                                <div class="detail-value">${post.likes}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Description</h4>
+                        <div class="description-content">${post.description}</div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>File${post.files.length > 1 ? 's' : ''}</h4>
+                        ${post.files.map(f => `
+                            <div class="file-item">
+                                <div class="file-name">📄 ${f.name}</div>
+                                <button class="file-download-btn" onclick="downloadFile(${f.id})">Download</button>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Feedback (${post.feedbacks ? post.feedbacks.length : 0})</h4>
+                        <div class="feedback-list">
+                            ${feedbacksHTML}
+                        </div>
+                        
+                        <div class="feedback-form">
+                            <h5>Add Your Feedback</h5>
+                            <form onsubmit="submitFeedback(event, ${post.id})">
+                                <textarea 
+                                    name="feedbackText" 
+                                    placeholder="Share your thoughts about this post..." 
+                                    required
+                                ></textarea>
+                                <button type="submit" class="submit-feedback-btn">Submit Feedback</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            sidebar.classList.add("open");
+            overlay.style.display = "block";
+        }
+
+        function closePostSidebar() {
+            document.getElementById("viewPostSidebar").classList.remove("open");
+            document.getElementById("sidebarOverlay").style.display = "none";
+        }
+
+        function downloadFile(fileId) {
+            window.location.href = `/knowledge-posts/files/${fileId}/download`;
+        }
+
+        function downloadFirstFile(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (post && post.files && post.files.length > 0) {
+                downloadFile(post.files[0].id);
+            }
+        }
+
+        async function deleteFile(fileId) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+            try {
+                await fetch(`/knowledge-posts/files/${fileId}`, { method: "DELETE" });
+                loadPosts();
+                closePostSidebar();
+            } catch (error) {
+                console.error('Error deleting file:', error);
+                alert('Failed to delete file');
+            }
+        }
+        async function downloadAllFiles(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post || !post.files || post.files.length === 0) return;
+
+            // Download each file sequentially with a small delay
+            for (let i = 0; i < post.files.length; i++) {
+                setTimeout(() => {
+                    downloadFile(post.files[i].id);
+                }, i * 500); // 500ms delay between downloads
+            }
+        }
+        async function toggleLike(postId) {
+            try {
+                await fetch(`/knowledge-posts/${postId}/like`, { method: "POST" });
+                await loadPosts();
+                
+                // Update sidebar if open
+                const post = posts.find(p => p.id === postId);
+                if (post && document.getElementById("viewPostSidebar").classList.contains("open")) {
+                    openPostSidebar(postId);
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+
+        async function submitFeedback(event, postId) {
+            event.preventDefault();
+            const form = event.target;
+            const text = form.feedbackText.value;
+
+            const fd = new FormData();
+            fd.append("text", text);
+
+            try {
+                await fetch(`/knowledge-posts/${postId}/feedback`, {
+                    method: "POST",
+                    body: fd
+                });
+
+                form.feedbackText.value = '';
+                await loadPosts();
+                openPostSidebar(postId);
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('Failed to submit feedback');
+            }
+        }
+
+        async function uploadFile(e) {
+            e.preventDefault();
+
+            if (!quillEditor) {
+                alert('Editor not initialized');
+                return;
+            }
+
+            const title = document.getElementById('postTitle').value;
+            const category = document.getElementById('category').value;
+            const description = quillEditor.root.innerHTML;
+            const fileInput = document.getElementById('fileInput');
+
+            if (!title || !category || !description) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append("title", title);
+            fd.append("description", description);
+            fd.append("category", category);
+
+            for (const file of fileInput.files) {
+                fd.append("files", file);
+            }
+
+            try {
+                const response = await fetch("/knowledge-posts", {
+                    method: "POST",
+                    body: fd
+                });
+
+                if (response.ok) {
+                    closeUploadModal();
+                    loadPosts();
+                } else {
+                    alert('Failed to upload post');
+                }
+            } catch (error) {
+                console.error('Error uploading post:', error);
+                alert('Failed to upload post');
+            }
+        }
+
+        function renderPosts() {
+            const grid = document.getElementById('postsGrid');
+            
+            if (!Array.isArray(filteredPosts) || filteredPosts.length === 0) {
+                grid.innerHTML = `<div class="empty">No posts found</div>`;
+                return;
+            }
+
+            grid.innerHTML = '';
+            filteredPosts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                card.onclick = () => openPostSidebar(post.id);
+
+                card.innerHTML = `
+                    <h4>${post.title}</h4>
+                    <div class="post-card-author">by ${post.author || 'Unknown'}</div>
+                    <div class="post-desc">${post.description}</div>
+                    <div class="post-meta">
+                        <span class="post-meta-tag category">${post.category}</span>
+                        <span class="post-meta-tag date">${post.date}</span>
+                    </div>
+                    <div class="post-stats">
+                        <span>📥 ${post.files.length} file${post.files.length !== 1 ? 's' : ''}</span>
+                        <span>❤️ ${post.likes} like${post.likes !== 1 ? 's' : ''}</span>
+                        <span>💬 ${post.feedbacks ? post.feedbacks.length : 0} feedback</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function loadPosts(page = 1) {
+            try {
+                const params = new URLSearchParams();
+                params.append("page", page);
+                params.append("limit", 10);
+
+                const categoryFilter = document.getElementById('filterCategory').value;
+                const dateFromFilter = document.getElementById('filterDateFrom').value;
+                const dateToFilter = document.getElementById('filterDateTo').value;
+
+                if (categoryFilter) params.append("category", categoryFilter);
+                if (dateFromFilter) params.append("date_from", dateFromFilter);
+                if (dateToFilter) params.append("date_to", dateToFilter);
+
+                const res = await fetch(`/knowledge-posts?${params.toString()}`);
+                
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('Server error:', res.status, errorText);
+                    throw new Error(`Server returned ${res.status}`);
+                }
+
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await res.text();
+                    console.error('Non-JSON response:', text);
+                    throw new Error('Server returned non-JSON response');
+                }
+
+                const json = await res.json();
+
+                posts = json.data || [];
+                filteredPosts = posts;
+                renderPosts();
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                document.getElementById('postsGrid').innerHTML = `<div class="empty">Failed to load posts. Check console for details.</div>`;
+            }
+        }
+
+        window.addEventListener("click", (event) => {
+            const uploadModal = document.getElementById("uploadModal");
+            const overlay = document.getElementById("sidebarOverlay");
+
+            if (event.target === uploadModal) {
+                closeUploadModal();
+            }
+
+            if (event.target === overlay) {
+                closePostSidebar();
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadTheme();
+            loadPosts();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="/static/qa_portal.css" rel="stylesheet">
+    <style>
+        /* Styles for Searchable Dropdown */
+        .searchable-select-container {
+            position: relative;
+            width: 100%;
+        }
+        .project-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary, #2d2d2d);
+            border: 1px solid var(--border-color, #444);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-top: 4px;
+        }
+        .project-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: var(--text-primary, #fff);
+            border-bottom: 1px solid #3d3d3d;
+        }
+        .project-option:last-child { border-bottom: none; }
+        .project-option:hover {
+            background: var(--accent-color, #3d5afe);
+        }
+        .project-option.no-results {
+            cursor: default;
+            color: #888;
+        }
+        .dark-theme .project-dropdown { background: #2d2d2d; color: white; }
+        .light-theme .project-dropdown { background: white; color: black; border-color: #ddd; }
+        .light-theme .project-option:hover { background: #f0f0f0; }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="dark-theme">
+    <div id="sidebarOverlay"></div>
+    <div class="container">
+        <div class="header">
+            <h2>🕵QA Portal</h2>
+            <div class="user-info">
+                <span>Welcome, {{ user_initials }}</span>
+            </div>
+        </div>
+        <div class="content">
+            <div class="controls-bar">
+                <div class="filters-group">
+                    <div class="filter-item">
+                        <label>Frequency</label>
+                        <select id="filterCategory" class="filter-select" onchange="applyFilters()">
+                          <option value="">All</option>
+                          <option value="once-off">Once-Off</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="alternate">Alternate</option>
+                          <option value="daily">Daily</option>
+                          <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>From Date</label>
+                        <input type="date" id="filterDateFrom" class="filter-input" onchange="applyFilters()">
+                    </div>
+                    <div class="filter-item">
+                        <label>To Date</label>
+                        <input type="date" id="filterDateTo" class="filter-input" onchange="applyFilters()">
+                    </div>
+
+                    <button class="add-post-btn" onclick="openUploadModal()">
+                        📋 Submit QA Post
+                    </button>
+
+                </div>
+                <div class="theme-toggle" onclick="toggleTheme()">
+                    <span class="theme-icon" id="themeIcon">🌙</span>
+                    <span id="themeText">Dark Mode</span>
+                </div>
+            </div>
+            <div class="posts-section">
+                <h3>Shared Files</h3>
+                <div class="posts-grid" id="postsGrid">
+                    <div class="empty">Loading posts...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 Submit for Quality Assurance</h3>
+                <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+            </div>
+
+            <form class="upload-form" onsubmit="createQAPost(event)" id="qaPostForm">
+                <div class="form-group">
+                    <label for="projectSearch">Select Project *</label>
+                    <div class="searchable-select-container">
+                        <input type="text"
+                               id="projectSearch"
+                               class="form-control"
+                               placeholder="🔍 Search and select project..."
+                               autocomplete="off"
+                               required
+                               onfocus="showProjectDropdown()"
+                               oninput="filterProjects()">
+
+                        <input type="hidden" id="selected_project_name" name="project_name">
+                        <input type="hidden" id="selected_task_details" name="task_details">
+                        <input type="hidden" id="selected_project_id" name="project_id">
+                        <input type="hidden" id="selected_project_frequency" name="frequency">
+
+                        <div id="projectDropdown" class="project-dropdown">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="qa_description">Description *</label>
+                    <div id="qa-editor-container"></div>
+                    <div class="char-count">
+                        <span id="qaCharCount">0</span> characters
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="qa_attachments">Attachments (Optional)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file"
+                               id="qa_attachments"
+                               name="files"
+                               multiple
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png,.mp4,.avi,.mov,.py,.js,.html,.css,.txt,.json"
+                               onchange="updateQaFilePreview()">
+                        <label for="qa_attachments" class="file-input-label" id="qaFileLabel">
+                            📎 Click to upload files or drag and drop (Max 10 files, 50MB total)
+                        </label>
+                    </div>
+                    <div class="file-preview" id="qaFilePreview"></div>
+                </div>
+
+                <button type="submit" class="upload-btn" id="submitQaPostBtn">
+                    <span id="qaBtnText">Submit for QA Review</span>
+                </button>
+            </form>
+
+            <div id="qa-post-status" class="upload-status" style="display: none; margin-top: 1rem;"></div>
+        </div>
+    </div>
+    <!-- View Post Sidebar -->
+    <aside id="viewPostSidebar"></aside>
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script>
+        // Global variables for QA form
+        let qaQuill = null;
+        let qaSelectedFiles = [];
+        let qaFormInitialized = false;
+
+        // Data passed from FastAPI backend
+        const availableProjects = {{ projects | tojson | safe }};
+
+        // --- Searchable Dropdown Logic ---
+        function showProjectDropdown() {
+            const dropdown = document.getElementById('projectDropdown');
+            dropdown.style.display = 'block';
+            filterProjects();
+        }
+
+        function filterProjects() {
+            const input = document.getElementById('projectSearch').value.toLowerCase();
+            const dropdown = document.getElementById('projectDropdown');
+
+            const filtered = availableProjects.filter(p =>
+                (p.project_name || '').toLowerCase().includes(input)
+            );
+
+            if (filtered.length > 0) {
+                dropdown.innerHTML = filtered.map((p, index) => `
+                    <div class="project-option" onclick="selectProject(${availableProjects.indexOf(p)})">
+                        <strong>${p.project_name}</strong>
+                        <div style="font-size: 0.8em; color: #888;">${p.task_details || 'No details'}</div>
+                    </div>
+                `).join('');
+            } else {
+                dropdown.innerHTML = '<div class="project-option no-results">No matching projects found</div>';
+            }
+        }
+
+        function selectProject(index) {
+            const project = availableProjects[index];
+
+            // Set visible search text
+            document.getElementById('projectSearch').value = project.project_name;
+
+            // Set hidden inputs for the form
+            document.getElementById('selected_project_name').value = project.project_name;
+            document.getElementById('selected_task_details').value = project.task_details || '';
+            document.getElementById('selected_project_id').value = project.id || project.project_id || '';
+            document.getElementById('selected_project_frequency').value = project.frequency || project.frequency_type || '';
+
+            document.getElementById('projectDropdown').style.display = 'none';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.searchable-select-container')) {
+                document.getElementById('projectDropdown').style.display = 'none';
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.form-group')) {
+                document.getElementById('projectDropdown').style.display = 'none';
+            }
+        });
+
+        function initQuill() {
+            const editorContainer = document.getElementById('editor-container');
+            const qaEditorContainer = document.getElementById('qa-editor-container');
+
+            // Initialize main editor if exists
+            if (editorContainer && !quillEditor) {
+                quillEditor = new Quill('#editor-container', {
+                    theme: 'snow',
+                    placeholder: 'Write description...',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline'],
+                            [{ list: 'ordered' }, { list: 'bullet' }],
+                            ['link', 'code-block']
+                        ]
+                    }
+                });
+            }
+
+            // Initialize QA editor if exists
+            if (qaEditorContainer && !qaQuill) {
+                qaQuill = new Quill('#qa-editor-container', {
+                    theme: 'snow',
+                    placeholder: 'Describe what you have completed, any notes for QA, testing instructions, etc...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'code-block'],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                // Character count for QA description
+                qaQuill.on('text-change', function() {
+                    const text = qaQuill.getText().trim();
+                    const charCount = document.getElementById('qaCharCount');
+                    if (charCount) {
+                        charCount.textContent = text.length;
+                    }
+                });
+
+                // Submit on Ctrl/Cmd + Enter
+                qaQuill.root.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        const qaForm = document.getElementById('qaPostForm');
+                        if (qaForm) {
+                            qaForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                        }
+                    }
+                });
+            }
+        }
+        // CREATE QA POST =======================================
+        async function createQAPost(event) {
+            event.preventDefault();
+
+            if (!qaQuill) {
+                alert('Editor not initialized');
+                return;
+            }
+
+            const projectName = document.getElementById('selected_project_name').value;
+            const taskDetails = document.getElementById('selected_task_details').value;
+            const Frequency = document.getElementById('selected_project_frequency').value;
+            const projectId = document.getElementById('selected_project_id').value;
+            const description = qaQuill.root.innerHTML;
+            const submitBtn = document.getElementById('submitQaPostBtn');
+            const qaBtnText = document.getElementById('qaBtnText');
+            const qaStatus = document.getElementById('qa-post-status');
+            if (!projectName || qaQuill.getText().trim().length === 0) {
+                alert('Please select a project and enter a description');
+                return;
+            }
+
+            // Validate description length
+            const textContent = qaQuill.getText().trim();
+            if (textContent.length === 0) {
+                alert('Please enter a description');
+                return;
+            }
+
+            // Create FormData
+            const fd = new FormData();
+            fd.append("project_name", projectName);
+            fd.append("project_id", projectId);
+            fd.append("description", description);
+            fd.append("task_details", taskDetails);
+            fd.append("frequency", Frequency);
+
+            // Add files
+            for (const file of qaSelectedFiles) {
+                fd.append("files", file);
+            }
+
+            // Disable submit button and show loading
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+            qaBtnText.innerHTML = '<span class="spinner"></span> Submitting...';
+
+            if (qaStatus) {
+                qaStatus.style.display = 'block';
+                qaStatus.className = 'upload-status loading';
+                qaStatus.textContent = 'Submitting QA post...';
+            }
+
+            try {
+                const response = await fetch("/qa-posts", {
+                    method: "POST",
+                    body: fd
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    if (qaStatus) {
+                        qaStatus.className = 'upload-status success';
+                        qaStatus.textContent = '✅ QA post submitted successfully!';
+                    }
+
+                    // Reset form
+                    resetQaPostModal();
+
+                    // Reload posts after successful submission
+                    setTimeout(() => {
+                        loadPosts();
+                        closeUploadModal();
+                    }, 1500);
+
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to submit QA post');
+                }
+            } catch (error) {
+                console.error('Error creating QA post:', error);
+
+                if (qaStatus) {
+                    qaStatus.className = 'upload-status error';
+                    qaStatus.textContent = `❌ ${error.message}`;
+                }
+
+                alert(`Failed to submit QA post: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                qaBtnText.textContent = 'Submit for QA Review';
+            }
+        }
+        function resetQaPostModal() {
+            const qaForm = document.getElementById('qaPostForm');
+            if (qaForm) qaForm.reset();
+            document.getElementById('selected_project_name').value = '';
+            document.getElementById('selected_task_details').value = '';
+            document.getElementById('selected_project_id').value = '';
+            document.getElementById('selected_project_frequency').value = '';
+            document.getElementById('projectSearch').value = '';
+            document.getElementById('qaFilePreview').innerHTML = '';
+            document.getElementById('qaFileLabel').textContent = '📎 Click to upload files or drag and drop (Max 10 files, 50MB total)';
+            if (qaQuill) qaQuill.setText('');
+            qaSelectedFiles = [];
+        }
+        function setupQaFileUpload() {
+            const qaFileInput = document.getElementById('qa_attachments');
+            const fileInputWrapper = qaFileInput?.parentElement;
+
+            if (!qaFileInput || !fileInputWrapper) return;
+
+            // Drag and drop functionality
+            fileInputWrapper.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            });
+
+            fileInputWrapper.addEventListener('dragleave', function() {
+                this.classList.remove('drag-over');
+            });
+
+            fileInputWrapper.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+
+                if (e.dataTransfer.files.length) {
+                    const files = Array.from(e.dataTransfer.files);
+
+                    // Validate file count
+                    if (qaSelectedFiles.length + files.length > 10) {
+                        alert('Maximum 10 files allowed');
+                        return;
+                    }
+
+                    // Update files
+                    const dt = new DataTransfer();
+                    [...qaSelectedFiles, ...files].forEach(file => dt.items.add(file));
+                    qaFileInput.files = dt.files;
+
+                    updateQaFilePreview();
+                }
+            });
+        }
+        function updateQaFilePreview() {
+            const qaFileInput = document.getElementById('qa_attachments');
+            const qaFilePreview = document.getElementById('qaFilePreview');
+            const qaFileLabel = document.getElementById('qaFileLabel');
+
+            if (!qaFileInput || !qaFilePreview || !qaFileLabel) return;
+
+            const files = Array.from(qaFileInput.files);
+            qaSelectedFiles = files;
+
+            // Update label
+            if (files.length > 0) {
+                if (files.length === 1) {
+                    qaFileLabel.textContent = `📎 ${files[0].name}`;
+                } else {
+                    qaFileLabel.textContent = `📎 ${files.length} files selected`;
+                }
+            } else {
+                qaFileLabel.textContent = '📎 Click to upload files or drag and drop (Max 10 files, 50MB total)';
+            }
+
+            // Update preview
+            qaFilePreview.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'qa-file-item';
+
+                // Get file icon based on type
+                let fileIcon = '📄';
+                if (file.type.startsWith('image/')) fileIcon = '🖼️';
+                else if (file.type.includes('pdf')) fileIcon = '📕';
+                else if (file.type.includes('zip') || file.type.includes('compressed')) fileIcon = '📦';
+                else if (file.type.includes('code') || file.type.includes('text') ||
+                        file.name.endsWith('.js') || file.name.endsWith('.html') ||
+                        file.name.endsWith('.css') || file.name.endsWith('.py')) fileIcon = '📝';
+                else if (file.type.includes('video')) fileIcon = '🎬';
+
+                fileItem.innerHTML = `
+                    <span>${fileIcon} ${file.name} (${formatFileSize(file.size)})</span>
+                    <button type="button" onclick="removeQaFile(${index})" title="Remove file">×</button>
+                `;
+                qaFilePreview.appendChild(fileItem);
+            });
+        }
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function removeQaFile(index) {
+            qaSelectedFiles.splice(index, 1);
+
+            // Update file input
+            const qaFileInput = document.getElementById('qa_attachments');
+            const dt = new DataTransfer();
+            qaSelectedFiles.forEach(file => dt.items.add(file));
+            qaFileInput.files = dt.files;
+
+            updateQaFilePreview();
+        }
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+
+            body.classList.toggle('light-theme');
+            body.classList.toggle('dark-theme');
+
+            if (body.classList.contains('light-theme')) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+
+            if (savedTheme === 'light') {
+                body.classList.add('light-theme');
+                body.classList.remove('dark-theme');
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+            } else {
+                body.classList.add('dark-theme');
+                body.classList.remove('light-theme');
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+            }
+        }
+
+        function applyFilters() {
+            loadPosts();
+        }
+
+        function openUploadModal() {
+            const modal = document.getElementById("uploadModal");
+            modal.classList.add("show");
+
+            // Initialize editors
+            if (!qaQuill) {
+                setTimeout(() => {
+                    initQuill();
+                    setupQaFileUpload();
+                }, 100);
+            }
+        }
+
+        function closeUploadModal() {
+            const modal = document.getElementById("uploadModal");
+            modal.classList.remove("show");
+            resetQaPostModal();
+        }
+
+        function updateFileName() {
+            const input = document.getElementById('fileInput');
+            const label = document.getElementById('fileLabel');
+            if (input.files.length > 0) {
+                if (input.files.length === 1) {
+                    label.textContent = `📎 ${input.files[0].name}`;
+                } else {
+                    label.textContent = `📎 ${input.files.length} files selected`;
+                }
+            } else {
+                label.textContent = '📎 Choose file (PDF, DOC, Excel, Video, Code, ZIP, etc.)';
+            }
+        }
+
+        function openPostSidebar(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const sidebar = document.getElementById("viewPostSidebar");
+            const overlay = document.getElementById("sidebarOverlay");
+
+            const feedbacksHTML = post.feedbacks && post.feedbacks.length > 0
+                ? post.feedbacks.map(fb => `
+                    <div class="feedback-item">
+                        <div class="feedback-author">${fb.author}</div>
+                        <div class="feedback-text">${fb.text}</div>
+                        <div class="feedback-date">${fb.date}</div>
+                    </div>
+                `).join('')
+                : '<div class="no-feedback">No feedback yet. Be the first to share your thoughts!</div>';
+
+            sidebar.innerHTML = `
+                <button class="sidebar-close" onclick="closePostSidebar()">×</button>
+                <div class="sidebar-content">
+                    <h2 class="sidebar-title">${post.title}</h2>
+
+                    <div class="sidebar-actions">
+                        ${post.files.length > 1
+                            ? `<button class="action-btn download-btn" onclick="downloadAllFiles(${post.id})">
+                                📥 Download All (${post.files.length} files)
+                            </button>`
+                            : `<button class="action-btn download-btn" onclick="downloadFile(${post.files[0]?.id})">
+                                📥 Download
+                            </button>`
+                        }
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Post Details</h4>
+                        <div class="post-detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Author:</div>
+                                <div class="detail-value">${post.author || 'Unknown'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Category:</div>
+                                <div class="detail-value">${post.category}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Date Shared:</div>
+                                <div class="detail-value">${post.date}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Platform:</div>
+                                <div class="detail-value">${post.task_details}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Description</h4>
+                        <div class="description-content">${post.description}</div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>File${post.files.length > 1 ? 's' : ''}</h4>
+                        ${post.files.map(f => `
+                            <div class="file-item">
+                                <div class="file-name">📄 ${f.name}</div>
+                                <button class="file-download-btn" onclick="downloadFile(${f.id})">Download</button>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Feedback (${post.feedbacks ? post.feedbacks.length : 0})</h4>
+                        <div class="feedback-list">
+                            ${feedbacksHTML}
+                        </div>
+
+                        <div class="feedback-form">
+                            <h5>Add Your Feedback</h5>
+                            <form onsubmit="submitFeedback(event, ${post.id})">
+                                <textarea
+                                    name="feedbackText"
+                                    placeholder="Share your thoughts about this post..."
+                                    required
+                                ></textarea>
+                                <button type="submit" class="submit-feedback-btn">Submit Feedback</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            sidebar.classList.add("open");
+            overlay.style.display = "block";
+        }
+
+        function closePostSidebar() {
+            document.getElementById("viewPostSidebar").classList.remove("open");
+            document.getElementById("sidebarOverlay").style.display = "none";
+        }
+
+        function downloadFile(fileId) {
+            window.location.href = `/qa-posts/files/${fileId}/download`;
+        }
+
+        function downloadFirstFile(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (post && post.files && post.files.length > 0) {
+                downloadFile(post.files[0].id);
+            }
+        }
+
+        async function deleteFile(fileId) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+            try {
+                await fetch(`/qa-posts/files/${fileId}`, { method: "DELETE" });
+                loadPosts();
+                closePostSidebar();
+            } catch (error) {
+                console.error('Error deleting file:', error);
+                alert('Failed to delete file');
+            }
+        }
+        async function downloadAllFiles(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post || !post.files || post.files.length === 0) return;
+
+            // Download each file sequentially with a small delay
+            for (let i = 0; i < post.files.length; i++) {
+                setTimeout(() => {
+                    downloadFile(post.files[i].id);
+                }, i * 500); // 500ms delay between downloads
+            }
+        }
+
+        async function submitFeedback(event, postId) {
+            event.preventDefault();
+            const form = event.target;
+            const text = form.feedbackText.value;
+
+            const fd = new FormData();
+            fd.append("text", text);
+
+            try {
+                await fetch(`/qa-posts/${postId}/feedback`, {
+                    method: "POST",
+                    body: fd
+                });
+
+                form.feedbackText.value = '';
+                await loadPosts();
+                openPostSidebar(postId);
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('Failed to submit feedback');
+            }
+        }
+
+        async function uploadFile(e) {
+            e.preventDefault();
+
+            if (!quillEditor) {
+                alert('Editor not initialized');
+                return;
+            }
+
+            const project_name = document.getElementById('postTitle').value;
+            const frequency = document.getElementById('category').value;
+            const description = quillEditor.root.innerHTML;
+            const task_details = ""; // Add this field if needed
+            const fileInput = document.getElementById('fileInput');
+
+            if (!project_name || !frequency || !description) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append("project_name", project_name);
+            fd.append("description", description);
+            fd.append("frequency", frequency);
+            fd.append("task_details", task_details);
+
+            for (const file of fileInput.files) {
+                fd.append("files", file);
+            }
+
+            try {
+                const response = await fetch("/qa-posts", {
+                    method: "POST",
+                    body: fd
+                });
+
+                if (response.ok) {
+                    closeUploadModal();
+                    loadPosts();
+                } else {
+                    const error = await response.json();
+                    alert(`Failed to upload post: ${error.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error uploading post:', error);
+                alert('Failed to upload post');
+            }
+        }
+
+        function renderPosts() {
+            const grid = document.getElementById('postsGrid');
+
+            if (!Array.isArray(filteredPosts) || filteredPosts.length === 0) {
+                grid.innerHTML = `<div class="empty">No posts found</div>`;
+                return;
+            }
+
+            grid.innerHTML = '';
+            filteredPosts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                card.onclick = () => openPostSidebar(post.id);
+
+                card.innerHTML = `
+                    <h4>${post.title}</h4>
+                    <div class="post-card-author">by ${post.author || 'Unknown'}</div>
+                    <div class="post-card-author">Platform: ${post.task_details || ' '}</div>
+                    <div class="post-desc">${post.description}</div>
+                    <div class="post-meta">
+                        <span class="post-meta-tag category">${post.category}</span>
+                        <span class="post-meta-tag date">${post.date}</span>
+                    </div>
+                    <div class="post-stats">
+                        <span>📥 ${post.files.length} file${post.files.length !== 1 ? 's' : ''}</span>
+                        <span>💬 ${post.feedbacks ? post.feedbacks.length : 0} feedback</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        // Add pagination function
+        function updatePagination(data) {
+            // You can implement pagination controls here
+            console.log(`Total posts: ${data.total}, Page: ${data.page}/${data.pages}`);
+        }
+        async function loadPosts(page = 1) {
+            try {
+                const grid = document.getElementById('postsGrid');
+                grid.innerHTML = `<div class="loading">Loading posts...</div>`;
+                const params = new URLSearchParams();
+                params.append("page", page);
+                params.append("limit", 10);
+
+                const categoryFilter = document.getElementById('filterCategory').value;
+                const dateFromFilter = document.getElementById('filterDateFrom').value;
+                const dateToFilter = document.getElementById('filterDateTo').value;
+
+                // Map frontend filter names to backend parameter names
+                if (categoryFilter) params.append("frequency", categoryFilter);
+                if (dateFromFilter) params.append("date_from", dateFromFilter);
+                if (dateToFilter) params.append("date_to", dateToFilter);
+
+                const res = await fetch(`/qa-posts?${params.toString()}`);
+
+                if (!res.ok) {
+                    throw new Error(`Server returned ${res.status}`);
+                }
+
+                const json = await res.json();
+
+                posts = json.data || [];
+                filteredPosts = posts;
+
+                // Update pagination info if provided
+                if (json.total !== undefined) {
+                    updatePagination(json);
+                }
+
+                renderPosts();
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                document.getElementById('postsGrid').innerHTML =
+                    `<div class="empty">Failed to load posts: ${error.message}</div>`;
+            }
+        }
+        function renderPagination(data) {
+            const paginationDiv = document.getElementById('pagination');
+            if (!paginationDiv || data.pages <= 1) return;
+
+            paginationDiv.innerHTML = `
+                <div class="pagination">
+                    <button ${data.page <= 1 ? 'disabled' : ''} onclick="loadPosts(${data.page - 1})">← Previous</button>
+                    <span>Page ${data.page} of ${data.pages}</span>
+                    <button ${data.page >= data.pages ? 'disabled' : ''} onclick="loadPosts(${data.page + 1})">Next →</button>
+                </div>
+            `;
+        }
+        // Add spinner CSS to head
+        const style = document.createElement('style');
+        style.textContent = `
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        `;
+        document.head.appendChild(style);
+        window.addEventListener("click", (event) => {
+            const uploadModal = document.getElementById("uploadModal");
+            const overlay = document.getElementById("sidebarOverlay");
+
+            if (event.target === uploadModal) {
+                closeUploadModal();
+            }
+
+            if (event.target === overlay) {
+                closePostSidebar();
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadTheme();
+            loadPosts();
+        });
+    </script>
+</body>
+</html>

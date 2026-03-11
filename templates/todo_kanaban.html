@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/static/todo_kanaban.css" rel="stylesheet">
+    <title>Modern Kanban Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+
+    </style>
+</head>
+<body data-user-id="{{ username }}">
+    <!-- App Header -->
+    <header class="app-header">
+        <h1 class="app-title">{{ name }}'s To Do</h1>
+        <div class="header-actions">
+            <a href="/show-esclated-todo" class="btn btn-secondary">⚠️ Escalated ToDo's</a>
+            {% if access_level in ['level2', 'level1'] %}
+                <a href="/dev-todo" class="btn btn-secondary"><i class="fa fa-users"></i> Team ToDo Dashboard</a>
+            {% endif %}
+            <a id="openAddModal" class="btn btn-secondary">✚ Creat Todo</a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Main Kanban Container -->
+        <main class="kanban-container" id="kanbanContainer">
+            <div class="kanban-board">
+                <!-- To Do Column -->
+                <div class="column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <div class="status-indicator todo-indicator"></div>
+                            <span>To Do</span>
+                            <span class="task-count" id="todo-count">0</span>
+                        </div>
+                    </div>
+                    <div id="todo" class="task-list" data-status="todo"></div>
+                </div>
+
+                <!-- In Progress Column -->
+                <div class="column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <div class="status-indicator progress-indicator"></div>
+                            <span>In Progress</span>
+                            <span class="task-count" id="progress-count">0</span>
+                        </div>
+                    </div>
+                    <div id="in_progress" class="task-list" data-status="in_progress"></div>
+                </div>
+
+                <!-- Done Column -->
+                <div class="column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <div class="status-indicator done-indicator"></div>
+                            <span>Done</span>
+                            <span class="task-count" id="done-count">0</span>
+                        </div>
+                    </div>
+                    <div id="done" class="task-list" data-status="done"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Side Panel -->
+        <div class="side-panel" id="sidePanel">
+            <div class="panel-header">
+                <h2 class="panel-title">Task Details</h2>
+                <button class="panel-close" id="panelClose">&times;</button>
+            </div>
+            <div class="panel-content" id="panelContent">
+                <!-- Content will be dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Task</h2>
+                <span class="modal-subtitle">Create Escalation or Simple Todo</span>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addTaskForm">
+
+                    <div class="form-group">
+                        <label class="form-label">Task Title</label>
+                        <input type="text" name="title" class="form-input" required placeholder="Enter task title...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project</label>
+                        <div class="dropdown">
+                            <input type="text" id="searchInputProject" class="dropdown-input" placeholder="Search project...">
+                            <div id="projectListDropDown" class="dropdown-content">
+                                {% for pr in projects %}
+                                    <div class="dropdown-item" data-value="{{ pr.project_id }}">{{ pr.project_name }}</div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="project_id" id="project_id">
+                        </div>
+                    </div>
+                    {% if access_level in ['level2', 'level1'] %}
+                        <div class="form-group">
+                            <label class="form-label">Assignee</label>
+                            <div class="dropdown">
+                                <input type="text" id="searchInput" class="dropdown-input" placeholder="Search assignee...">
+                                <div id="dropdownList" class="dropdown-content">
+                                    {% for dev in developers %}
+                                        <div class="dropdown-item" data-value="{{ dev.username }}">{{ dev.name }}</div>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" name="assignee_username" id="assignee_username">
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select name="priority" class="priority-select" required>
+                            <option value="normal">Normal</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Color</label>
+                        <div class="color-picker-group">
+                            <div class="color-picker color-purple active" data-color="purple"></div>
+                            <div class="color-picker color-blue" data-color="blue"></div>
+                            <div class="color-picker color-green" data-color="green"></div>
+                            <div class="color-picker color-red" data-color="red"></div>
+                            <div class="color-picker color-orange" data-color="orange"></div>
+                            <div class="color-picker color-grey" data-color="grey"></div>
+                        </div>
+                        <input type="hidden" id="colorInput" name="color" value="purple">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-input form-textarea" placeholder="Enter task description..."></textarea>
+                    </div>
+
+                    {% if access_level in ['level2', 'level1'] %}
+                        <div class="form-group">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="escalation" name="escalation" class="checkbox">
+                                <label for="escalation" class="form-label">Mark as Escalated</label>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Create Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock user data
+        const userId = document.body.dataset.userId || 'demo-user';
+        const API = {
+            async fetchAll() {
+                const res = await fetch(`/api/todos?username=${encodeURIComponent(userId)}`);
+                return res.json();
+            },
+            async create(data) {
+                const res = await fetch(`/api/todos`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(data)
+                });
+                return res.json();
+            },
+            async update(task_id, data) {
+                const res = await fetch(`/api/todos/${task_id}`, {
+                    method: "PATCH",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(data)
+                });
+                return res.json();
+            },
+            async softDelete(task_id) {
+                await fetch(`/api/todos/${task_id}`, { method: "DELETE" });
+            }
+        };
+
+        // DOM Elements
+        const modal = document.getElementById('modal');
+        const openModalBtn = document.getElementById('openAddModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const addTaskForm = document.getElementById('addTaskForm');
+        const sidePanel = document.getElementById('sidePanel');
+        const panelClose = document.getElementById('panelClose');
+        const panelContent = document.getElementById('panelContent');
+        const kanbanContainer = document.getElementById('kanbanContainer');
+
+        // Dropdown elements
+        const searchInput = document.getElementById('searchInput');
+        const dropdownList = document.getElementById('dropdownList');
+        const assignedPersonInput = document.getElementById('assignee_username');
+
+        const searchInputProject = document.getElementById('searchInputProject');
+        const projectListDropDown = document.getElementById('projectListDropDown');
+        const projectIdInput = document.getElementById('project_id');
+
+        // Side Panel Functions
+        function openSidePanel(task) {
+            const priorityClass = `priority-${task.priority || 'normal'}`;
+            const priorityText = (task.priority || 'normal').charAt(0).toUpperCase() + (task.priority || 'normal').slice(1);
+
+            panelContent.innerHTML = `
+                <div class="panel-field">
+                    <label class="panel-label">Priority</label>
+                    <div class="panel-value">
+                        <span class="task-priority ${priorityClass}">${priorityText}</span>
+                    </div>
+                </div>
+                <div class="panel-field">
+                    <label class="panel-label">Title</label>
+                    <div class="panel-value">${task.todo_title}</div>
+                </div>
+                <div class="panel-field">
+                    <label class="panel-label">Project Name</label>
+                    <div class="panel-value">${task.project_name || 'No project selected'}</div>
+                </div>
+                <div class="panel-field">
+                    <label class="panel-label">Description</label>
+                    <div class="panel-value">${task.todo_descr || 'No description provided'}</div>
+                </div>
+                <div class="panel-field">
+                    <label class="panel-label">Assigned To</label>
+                    <div class="panel-value">${task.assignee_name || 'Unknown'}</div>
+                </div>
+                <div class="panel-field">
+                    <label class="panel-label">Created Date</label>
+                    <div class="panel-value">${task.todo_created_date}</div>
+                </div>
+                <div class="panel-field">
+                    <label class="panel-label">Completed Date</label>
+                    <div class="panel-value">${task.todo_completed_date || "Not Completed Yet..."}</div>
+                </div>
+                <div class="panel-field">
+                    <label class="panel-label">Escalated</label>
+                    <div class="panel-value">${task.escalation === 'yes' ? 'Yes' : 'No'}</div>
+                </div>
+                <div class="panel-field">
+                    <label class="panel-label">Color Theme</label>
+                    <div class="panel-value">
+                        <div class="color-picker color-${task.color}" style="display: inline-block; margin-right: 8px;"></div>
+                        ${task.color.charAt(0).toUpperCase() + task.color.slice(1)}
+                    </div>
+                </div>
+            `;
+
+            sidePanel.classList.add('open');
+            kanbanContainer.classList.add('with-panel');
+        }
+
+        function closeSidePanel() {
+            sidePanel.classList.remove('open');
+            kanbanContainer.classList.remove('with-panel');
+        }
+
+        // Side Panel Event Listeners
+        panelClose.addEventListener('click', closeSidePanel);
+
+        // Color picker functionality
+        document.querySelectorAll('.color-picker').forEach(picker => {
+            picker.addEventListener('click', function() {
+                document.querySelectorAll('.color-picker').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('colorInput').value = this.dataset.color;
+            });
+        });
+
+        // Modal functionality
+        openModalBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Dropdown functionality for assignees
+        // Dropdown functionality for assignees
+        // FIX: Check if searchInput exists before adding listeners
+        if (searchInput && dropdownList) {
+            searchInput.addEventListener('focus', () => dropdownList.classList.add('show'));
+            searchInput.addEventListener('keyup', () => {
+                const filter = searchInput.value.toLowerCase();
+                [...dropdownList.getElementsByClassName('dropdown-item')].forEach(item => {
+                    item.style.display = item.textContent.toLowerCase().includes(filter) ? 'block' : 'none';
+                });
+            });
+
+            dropdownList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('dropdown-item')) {
+                    searchInput.value = e.target.textContent;
+                    // FIX: Check if input exists before setting value (though it should if the list exists)
+                    if (assignedPersonInput) {
+                        assignedPersonInput.value = e.target.dataset.value;
+                    }
+                    dropdownList.classList.remove('show');
+                }
+            });
+        }
+
+        // Dropdown functionality for projects
+        searchInputProject.addEventListener('focus', () => projectListDropDown.classList.add('show'));
+        searchInputProject.addEventListener('keyup', () => {
+            const filter = searchInputProject.value.toLowerCase();
+            [...projectListDropDown.getElementsByClassName('dropdown-item')].forEach(item => {
+                item.style.display = item.textContent.toLowerCase().includes(filter) ? 'block' : 'none';
+            });
+        });
+
+        projectListDropDown.addEventListener('click', (e) => {
+            if (e.target.classList.contains('dropdown-item')) {
+                searchInputProject.value = e.target.textContent;
+                projectIdInput.value = e.target.dataset.value;
+                projectListDropDown.classList.remove('show');
+            }
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown')) {
+                dropdownList.classList.remove('show');
+                projectListDropDown.classList.remove('show');
+            }
+        });
+
+        // Close side panel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (sidePanel.classList.contains('open') &&
+                !sidePanel.contains(e.target) &&
+                !e.target.closest('.task-card')) {
+                closeSidePanel();
+            }
+        });
+
+        // Escape key handlers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (modal.style.display === 'flex') {
+                    modal.style.display = 'none';
+                } else if (sidePanel.classList.contains('open')) {
+                    closeSidePanel();
+                }
+            }
+        });
+
+        // Task rendering
+        function renderTasks(tasks) {
+            const columns = {
+                todo: document.getElementById('todo'),
+                in_progress: document.getElementById('in_progress'),
+                done: document.getElementById('done')
+            };
+
+            // Clear all columns
+            Object.values(columns).forEach(column => column.innerHTML = '');
+
+            // Count tasks in each column
+            const counts = { todo: 0, in_progress: 0, done: 0 };
+
+            tasks.forEach(task => {
+                counts[task.status]++;
+
+                const taskCard = document.createElement('div');
+                taskCard.className = `task-card ${task.color}`;
+                taskCard.draggable = true;
+                taskCard.dataset.id = task.id;
+
+                // Get priority display
+                const priority = task.priority || 'normal';
+                const priorityClass = `priority-${priority}`;
+                const priorityText = priority.charAt(0).toUpperCase() + priority.slice(1);
+
+                taskCard.innerHTML = `
+                    <div class="task-header">
+                        <div class="task-title">${task.todo_title}</div>
+                        <div class="task-priority ${priorityClass}">${priorityText}</div>
+                    </div>
+                    <div class="task-meta">
+                        <div class="task-date">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span>${task.todo_created_date}</span>
+                        </div>
+                        <div class="task-assignee">${task.project_name || "No Project selected"}</div>
+                        <div class="task-actions">
+                            ${(task.status !== 'done' && task.access_level === 'level2') ? `
+                                <button class="action-btn delete-btn" data-id="${task.id}">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3,6 5,6 21,6"></polyline>
+                                        <path d="m19,6v14c0,1-1,2-2,2H7c-1,0-2-1-2-2V6m3,0V4c0-1,1-2,2-2h4c1,0,2,1,2,2v2"></path>
+                                    </svg>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Add click event to open side panel
+                taskCard.addEventListener('click', (e) => {
+                    // Don't open panel if clicking delete button
+                    if (!e.target.closest('.delete-btn')) {
+                        openSidePanel(task);
+                    }
+                });
+
+                // Add drag event listeners
+                taskCard.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', task.id);
+                    taskCard.classList.add('dragging');
+                });
+
+                taskCard.addEventListener('dragend', () => {
+                    taskCard.classList.remove('dragging');
+                });
+
+                // Add delete functionality
+                const deleteBtn = taskCard.querySelector('.delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        if (confirm('Are you sure you want to delete this task?')) {
+                            await API.softDelete(task.id);
+                            loadTasks();
+                        }
+                    });
+                }
+
+                columns[task.status].appendChild(taskCard);
+            });
+
+            // Update task counts
+            document.getElementById('todo-count').textContent = counts.todo;
+            document.getElementById('progress-count').textContent = counts.in_progress;
+            document.getElementById('done-count').textContent = counts.done;
+        }
+
+        // Drag and drop functionality
+        Object.values(document.querySelectorAll('.task-list')).forEach(taskList => {
+            taskList.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                taskList.classList.add('drag-over');
+            });
+
+            taskList.addEventListener('dragleave', (e) => {
+                if (!taskList.contains(e.relatedTarget)) {
+                    taskList.classList.remove('drag-over');
+                }
+            });
+
+            taskList.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                taskList.classList.remove('drag-over');
+
+                const taskId = e.dataTransfer.getData('text/plain');
+                const newStatus = taskList.dataset.status;
+
+                await API.update(taskId, { status: newStatus });
+                loadTasks();
+            });
+        });
+
+        // Form submission
+        addTaskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const escalationElement = document.getElementById('escalation');
+            const escalationChecked = escalationElement ? escalationElement.checked : false;
+            const payload = {
+                username: userId,
+                title: formData.get('title'),
+                description: formData.get('description'),
+                priority: formData.get('priority'),
+                color: formData.get('color') || 'purple',
+                assignee_username: formData.get('assignee_username') || null,
+                project_id: formData.get('project_id'),
+                escalation: escalationChecked ? 'yes' : 'no'
+            };
+
+            await API.create(payload);
+
+            // Reset form and close modal
+            e.target.reset();
+
+            // Clear hidden fields and dropdown inputs
+            if (assignedPersonInput) assignedPersonInput.value = '';
+            searchInput.value = '';
+            projectIdInput.value = '';
+            searchInputProject.value = '';
+
+           // Reset color picker
+            document.querySelectorAll('.color-picker').forEach(p => p.classList.remove('active'));
+            const purplePicker = document.querySelector('.color-picker[data-color="purple"]');
+            if (purplePicker) purplePicker.classList.add('active');
+            const colorInput = document.getElementById('colorInput');
+            if (colorInput) colorInput.value = 'purple';
+            // Clear escalation checkbox
+            // document.getElementById('escalation').checked = false;
+            // FIX 4: Only uncheck escalation if it exists
+            if (escalationElement) escalationElement.checked = false;
+            modal.style.display = 'none';
+            loadTasks();
+        });
+
+        // Load tasks function
+        async function loadTasks() {
+            try {
+                const tasksData = await API.fetchAll();
+                renderTasks(tasksData);
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+            }
+        }
+
+        // Initialize the application
+        loadTasks();
+    </script>
+</body>
+</html>

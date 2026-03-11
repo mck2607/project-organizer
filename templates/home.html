@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Actowiz - Dashboard{% endblock %}
+
+{% block content %}
+<div class="welcome-card">
+    <div class="welcome-text">
+        <h1><span id="greeting-text">Happy evening, </span><span>{{ user_initials }}</span></h1>
+        <p class="text-muted">You're making great progress! Keep up the momentum.</p>
+        <div class="stats-badges">
+            <div class="stat-badge"><i class="fa-solid fa-fire"></i> 12 day streak</div>
+            <div class="stat-badge purple"><i class="fa-solid fa-trophy"></i> Level 7</div>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div class="donut-chart"></div>
+        <div>
+            <h4 class="text-green">+15% this week</h4>
+            <span class="text-muted text-xs">Ahead of 78% of users</span>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-content">
+            <p>Tasks Completed</p>
+            <h3 id="taskCompletedCount">
+                {{ todos | selectattr("status", "equalto", "done") | list | length }}
+                /
+                {{ todos | length }}
+            </h3>
+            <div class="stat-trend text-green"><i class="fa-solid fa-arrow-up"></i> 12% from last week</div>
+        </div>
+        <div class="icon-box" style="background: var(--primary-dim); color: var(--primary);">
+            <i class="fa-solid fa-check"></i>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-content">
+            <p>Active Projects</p>
+            <h3>6</h3>
+            <div class="stat-trend text-muted">2 due this week</div>
+        </div>
+        <div class="icon-box" style="background: var(--accent-purple-dim); color: var(--accent-purple);">
+            <i class="fa-regular fa-folder"></i>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-content">
+            <p>Goals Achieved</p>
+            <h3>8/10</h3>
+            <div class="stat-trend text-green"><i class="fa-solid fa-arrow-up"></i> 5% from last week</div>
+        </div>
+        <div class="icon-box" style="background: var(--accent-orange-dim); color: var(--accent-orange);">
+            <i class="fa-solid fa-bullseye"></i>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-content">
+            <p>Productivity Score</p>
+            <h3>92%</h3>
+            <div class="stat-trend text-green"><i class="fa-solid fa-arrow-up"></i> 8% from last week</div>
+        </div>
+        <div class="icon-box" style="background: var(--accent-red-dim); color: var(--accent-red);">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-split">
+    <section>
+        <div class="section-header">
+            <h3><i class="fa-solid fa-list-check text-green"></i> Today's Tasks
+                <span class="badge" style="background: #2a303c">{{ todos|length }}</span>
+                <a href="/my-to-do" class="text-sm text-muted" style="text-decoration: none;">View all &rarr;</a>
+            </h3>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="filterTasks('all', this)">All</div>
+            <div class="tab" onclick="filterTasks('active', this)">Active</div>
+            <div class="tab" onclick="filterTasks('completed', this)">Completed</div>
+        </div>
+
+        <div class="task-list" id="taskList">
+            {% for todo in todos %}
+                <div class="task-item {% if todo.status == 'done' %}checked completed{% endif %}"
+                     data-task-id="{{ todo.id }}"
+                     data-title="{{ todo.todo_title }}"
+                     data-description="{{ todo.description or '' }}"
+                     data-status="{{ todo.status }}"
+                     data-priority="{{ todo.priority or '' }}"
+                     data-created="{{ todo.todo_created_date }}"
+                >
+
+                    <div class="checkbox" onclick="toggleTask(this.parentElement)">
+                        {% if todo.status == 'done' %}
+                        <i class="fa-solid fa-check text-xs"></i>
+                        {% endif %}
+                    </div>
+
+                    <div class="task-details">
+                        <h4>{{ todo.todo_title }}</h4>
+                        <span>
+                            <i class="fa-regular fa-clock"></i>
+                            {{ todo.todo_created_date[:10] if todo.todo_created_date else 'No date' }}
+                        </span>
+
+                        {% if todo.priority %}
+                        <span class="priority-badge" style="background: {{ todo.color or '#6c757d' }};">
+                            {{ todo.priority }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- 👇 View Button -->
+                    <button class="view-btn" onclick="openTodoModal(this.parentElement)">
+                        View
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section>
+        <div class="section-header">
+            <h3><i class="fa-regular fa-folder text-purple"></i> Active Projects</h3>
+            <a href="/dashboard" class="text-sm text-muted" style="text-decoration: none;">View all &rarr;</a>
+        </div>
+
+        <div class="projects-grid">
+            <div class="project-card">
+                <div class="project-header">
+                    <div>
+                        <h4>E-Commerce Redesign</h4>
+                        <span class="text-xs text-muted">Complete overhaul</span>
+                    </div>
+                    <span class="status-pill status-green">On Track</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 75%; background: var(--primary);"></div></div>
+            </div>
+            </div>
+    </section>
+</div>
+
+<section>
+    <div class="section-header">
+        <h3><i class="fa-solid fa-book-open text-orange"></i> Knowledge Hub</h3>
+        <a href="/knowledge-hub" class="text-sm text-muted" style="text-decoration: none;">Browse library &rarr;</a>
+    </div>
+    <div class="knowledge-grid">
+        <div class="hub-card">
+            <div class="hub-icon" style="color: var(--accent-purple); background: var(--accent-purple-dim);">
+                <i class="fa-solid fa-play"></i>
+            </div>
+            <div class="hub-info">
+                <h5>Advanced React</h5>
+                <span>Video • 45:32</span>
+            </div>
+        </div>
+        </div>
+</section>
+<!-- Todo Detail Modal -->
+<div id="todoModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeTodoModal()">&times;</span>
+
+        <h3 id="modalTitle"></h3>
+        <p><strong>Description:</strong> <span id="modalDescription"></span></p>
+        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+        <p><strong>Priority:</strong> <span id="modalPriority"></span></p>
+        <p><strong>Created At:</strong> <span id="modalCreated"></span></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function setTimeOfDayGreeting() {
+        const greetingElement = document.getElementById('greeting-text');
+        if (!greetingElement) return;
+
+        const hour = new Date().getHours();
+        let greeting;
+
+        if (hour >= 5 && hour < 12) greeting = "Good morning, ";
+        else if (hour >= 12 && hour < 17) greeting = "Good afternoon, ";
+        else if (hour >= 17 && hour < 22) greeting = "Good evening, ";
+        else greeting = "Hello, ";
+
+        greetingElement.textContent = greeting;
+    }
+
+    document.addEventListener('DOMContentLoaded', setTimeOfDayGreeting);
+
+    async function toggleTask(element) {
+        const taskId = element.getAttribute('data-task-id');
+        const isCompleted = element.classList.contains('checked');
+
+        // Toggle UI immediately for better UX
+        element.classList.toggle('checked');
+        element.classList.toggle('completed');
+        const checkbox = element.querySelector('.checkbox');
+        checkbox.innerHTML = element.classList.contains('checked')
+            ? '<i class="fa-solid fa-check text-xs"></i>'
+            : '';
+
+        // Update database
+        try {
+            const response = await fetch(`/api/todos/${taskId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    status: isCompleted ? 'pending' : 'done'
+                })
+            });
+
+            if (!response.ok) {
+                // Revert UI if request failed
+                element.classList.toggle('checked');
+                element.classList.toggle('completed');
+                checkbox.innerHTML = element.classList.contains('checked')
+                    ? '<i class="fa-solid fa-check text-xs"></i>'
+                    : '';
+                console.error('Failed to update task');
+            }else {
+                updateTaskCounter();  // 🔥 update counter here
+            }
+        } catch (error) {
+            // Revert UI if request failed
+            element.classList.toggle('checked');
+            element.classList.toggle('completed');
+            checkbox.innerHTML = element.classList.contains('checked')
+                ? '<i class="fa-solid fa-check text-xs"></i>'
+                : '';
+            console.error('Error updating task:', error);
+        }
+    }
+
+    function filterTasks(filter, tabElement) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tabElement.classList.add('active');
+        const tasks = document.querySelectorAll('.task-item');
+        tasks.forEach(task => {
+            if (filter === 'all') task.style.display = 'flex';
+            else if (filter === 'active') task.style.display = task.classList.contains('completed') ? 'none' : 'flex';
+            else if (filter === 'completed') task.style.display = task.classList.contains('completed') ? 'flex' : 'none';
+        });
+    }
+
+    function openTodoModal(taskElement) {
+        const modal = document.getElementById('todoModal');
+
+        document.getElementById('modalTitle').textContent = taskElement.dataset.title;
+        document.getElementById('modalDescription').textContent = taskElement.dataset.description || "No description";
+        document.getElementById('modalStatus').textContent = taskElement.dataset.status;
+        document.getElementById('modalPriority').textContent = taskElement.dataset.priority || "Not set";
+        document.getElementById('modalCreated').textContent = taskElement.dataset.created || "No date";
+
+        modal.classList.add("active");
+    }
+
+    function closeTodoModal() {
+        document.getElementById('todoModal').classList.remove("active");
+    }
+    function updateTaskCounter() {
+        const allTasks = document.querySelectorAll('.task-item');
+        const completedTasks = document.querySelectorAll('.task-item.completed');
+
+        const total = allTasks.length;
+        const completed = completedTasks.length;
+
+        const counter = document.getElementById('taskCompletedCount');
+        counter.textContent = `${completed}/${total}`;
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeOfDayGreeting();
+        updateTaskCounter();
+    });
+    window.onclick = function(event) {
+    const modal = document.getElementById('todoModal');
+    if (event.target === modal) {
+        modal.classList.remove("active");
+    }
+}
+</script>
+{% endblock %}

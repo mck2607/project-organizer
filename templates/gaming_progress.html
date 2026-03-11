@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game Progress Tracker</title>
+  <link rel="stylesheet" href="/static/gaming_progress.css">
+</head>
+<body>
+  <div class="container">
+    {% if success %}
+      <div id="alert success">
+        ✅ {{ message }}.
+      </div>
+    {% elif not success %}
+      <div id="alert danger">
+        {{ message }}.
+      </div>
+    {% endif %}
+    <h1>🎮 Project Quest Tracker</h1>
+    <div class="levels">
+      <div class="level {{ 'completed' if not step else '' }}">🚨 Not started project</div>
+      <div class="level {{ 'completed' if step == 'step-1' else '' }}">🤝 Lev.-1 Project Understood</div>
+      <div class="level {{ 'completed' if step == 'step-2' else '' }}">🔗 Lev.-2 Link Extraction</div>
+      <div class="level {{ 'completed' if step == 'step-3' else '' }}">📶 Lev.-3 Data Extracted</div>
+      <div class="level {{ 'completed' if step == 'step-4' else '' }}">💥 Lev.-4 QA Sent</div>
+      <div class="level {{ 'completed' if step == 'step-5' else '' }}">👑 Lev.-5 QA Done</div>
+    </div>
+    <div class="progress-container">
+      <div class="progress-bar" style="width: {{ progress }}%">{{ progress }}%</div>
+    </div>
+    {% if allowed %}
+      <label>Select Step:</label>
+      <input type="hidden" id="project-id" value="{{ project_id }}">
+      <input type="hidden" id="user-id" value="{{ username }}">
+      <select id="step-select">
+        <option value="20">Step 1 - Project Understood</option>
+        <option value="40">Step 2 - Link Extraction</option>
+        <option value="60">Step 3 - Data Extracted</option>
+        <option value="70">Step 4 - QA Sent</option>
+        <option value="100">Step 5 - QA Done</option>
+      </select>
+      <button onclick="upgrade_level()">Go</button>
+    {% endif %}
+  </div>
+  <script>
+    function upgrade_level() {
+      const project_id = document.getElementById("project-id").value;
+      const project_progress = document.getElementById("step-select").value;
+      const username = document.getElementById("user-id").value;
+
+      if (!project_id) {
+        showAlert("Something went wrong", false);
+        return;
+      }
+      fetch(`/gaming-zone/${project_progress}/${project_id}/${username}`)
+        .then(res => res.json())
+        .then(data => {
+          showAlert(data.message, data.success);
+          if (data.success) {
+            // 🎉 Trigger celebration
+            launchConfetti();
+
+            // ⏳ Wait 2 seconds before refreshing
+            setTimeout(() => {
+              location.reload();
+            }, 2000);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          showAlert("Something went wrong. Please try again.", false);
+        });
+    }
+  function launchConfetti() {
+    const duration = 2 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+
+  function randomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+    const interval = setInterval(function () {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      // since particles fall down, start a bit higher than random
+      confetti(Object.assign({}, defaults, {
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.9), y: Math.random() - 0.2 }
+      }));
+    }, 250);
+  }
+
+  function showAlert(message, success) {
+    const container = document.querySelector(".container");
+    container.innerHTML += `
+      <div class="alert ${success ? 'success' : 'danger'}">
+        ${success ? '✅' : '❌'} ${message}
+      </div>
+    `;
+  }
+
+  </script>
+  <canvas id="confetti-canvas"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+</body>
+</html>

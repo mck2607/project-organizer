@@ -1,0 +1,119 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", sans-serif;
+  }
+
+  body {
+    background: #eef2f7;
+    padding: 30px;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+    padding: 24px;
+  }
+
+  h2 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    background-color: #2d6cdf;
+    color: white;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 14px;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #f5f8fb;
+  }
+
+  tbody tr:hover {
+    background-color: #ebf0fa;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    margin: 4px 4px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+  }
+
+  .btn.view {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .btn.view:hover {
+    background-color: #43a047;
+  }
+
+  .btn.edit {
+    background-color: #2196f3;
+    color: white;
+  }
+
+  .btn.edit:hover {
+    background-color: #1976d2;
+  }
+
+  /* Remove hyperlink styling */
+  .btn a {
+    color: white;
+    text-decoration: none;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 16px;
+    }
+
+    table, thead, tbody, th, td, tr {
+      display: block;
+    }
+
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      margin-bottom: 16px;
+      background: #fff;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    td {
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+    }
+
+    td::before {
+      content: attr(data-label);
+      font-weight: bold;
+      color: #555;
+    }
+  }

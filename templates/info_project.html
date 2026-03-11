@@ -1,0 +1,2412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Details</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/info_project.css">
+  <style>
+    :root {
+      --bg-primary: #f0f4f8;
+      --bg-secondary: #fff;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --accent-primary: #3b82f6;
+      --accent-secondary: #10b981;
+      --border-color: #e5e7eb;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      --input-bg: #fafafa;
+      --modal-bg: #fff;
+      --modal-text: #1f2937;
+      --level-card-bg: #f8fafc;
+      --level-card-hover: #f1f5f9;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #0b0e14;
+      --bg-secondary: #151a23;
+      --text-primary: White;
+      --text-secondary: #a0aec0;
+      --accent-primary: White;
+      --accent-secondary: White;
+      --border-color: #2d3748;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      --input-bg: #1a202c;
+      --modal-bg: #151a23;
+      --modal-text: White;
+      --level-card-bg: #1a202c;
+      --level-card-hover: #2d3748;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .project-card {
+      background: var(--bg-secondary);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      border-radius: 12px;
+      margin: 1rem auto;
+      max-width: 1200px;
+    }
+
+    .theme-toggle-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .theme-toggle {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 50px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .theme-icon {
+      font-size: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .theme-toggle:hover .theme-icon {
+      transform: rotate(20deg);
+    }
+
+    .alert {
+      padding: 12px 18px;
+      border-radius: 6px;
+      margin: 1rem auto;
+      font-weight: 600;
+      font-size: 1rem;
+      max-width: 800px;
+    }
+    .alert.success {
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+    .alert.danger {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+
+    /* Equal width panels */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 968px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Assignment Container Styles */
+    .assign-container,
+    .qa-assign-container {
+      background: var(--bg-secondary);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      height: 100%;
+    }
+
+    .assign-container:hover,
+    .qa-assign-container:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    [data-theme="dark"] .assign-container:hover,
+    [data-theme="dark"] .qa-assign-container:hover {
+      box-shadow: 0 8px 24px rgba(0, 220, 130, 0.2);
+    }
+
+    .assign-container h3,
+    .qa-assign-container h3 {
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .assign-container label,
+    .qa-assign-container label {
+      display: block;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .assign-container select,
+    .assign-container textarea,
+    .qa-assign-container select,
+    .qa-assign-container textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      transition: all 0.2s;
+      background: var(--input-bg);
+      color: var(--text-primary);
+    }
+
+    .assign-container select:focus,
+    .assign-container textarea:focus,
+    .qa-assign-container select:focus,
+    .qa-assign-container textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    [data-theme="dark"] .assign-container select:focus,
+    [data-theme="dark"] .assign-container textarea:focus,
+    [data-theme="dark"] .qa-assign-container select:focus,
+    [data-theme="dark"] .qa-assign-container textarea:focus {
+      box-shadow: 0 0 0 3px rgba(0, 220, 130, 0.2);
+    }
+
+    .assign-container textarea,
+    .qa-assign-container textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .assign-btn,
+    .qa-assign-btn {
+      width: 100%;
+      padding: 0.875rem;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .assign-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .qa-assign-btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .assign-btn:hover,
+    .qa-assign-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .assign-btn:hover {
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .qa-assign-btn:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .assign-btn:active,
+    .qa-assign-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Feedback Section Styles */
+    .feedback-section {
+      margin: 2rem 0;
+      padding: 2rem;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    .feedback-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .feedback-header h2 {
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toggle-feedback-btn {
+      padding: 0.6rem 1.2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .toggle-feedback-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .feedback-form-container {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    .feedback-form-container.active {
+      display: block;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      background: var(--input-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    #feedback-editor-container {
+      min-height: 200px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--input-bg);
+      transition: all 0.2s;
+    }
+
+    [data-theme="dark"] #feedback-editor-container {
+      background: var(--bg-secondary);
+    }
+
+    [data-theme="dark"] .ql-toolbar {
+      background: #1a202c !important;
+      border-bottom-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .ql-container {
+      background: var(--bg-secondary);
+    }
+
+    [data-theme="dark"] .ql-editor {
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .ql-stroke {
+      stroke: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .ql-fill {
+      fill: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .ql-picker-label {
+      color: var(--text-primary) !important;
+    }
+
+    #feedback-editor-container:focus-within {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .ql-toolbar {
+      border: none !important;
+      border-bottom: 2px solid var(--border-color) !important;
+      background: #f9fafb;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .ql-container {
+      border: none !important;
+      font-size: 1rem;
+      min-height: 200px;
+    }
+
+    .ql-editor {
+      min-height: 200px;
+      padding: 1rem;
+    }
+
+    .ql-editor.ql-blank::before {
+      color: var(--text-secondary);
+      font-style: normal;
+    }
+
+    .char-count {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      background: var(--input-bg);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    .file-input-label:hover {
+      border-color: #667eea;
+      background: var(--bg-secondary);
+      color: #667eea;
+    }
+
+    .file-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--input-bg);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .file-item button {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .submit-feedback-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-feedback-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .submit-feedback-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-feedback-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid white;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .section h2 {
+      color: var(--text-primary);
+    }
+
+    .section {
+      border: 1px solid var(--border-color);
+      padding: 1.5rem;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    table th,
+    table td {
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+
+    table th {
+      background-color: var(--input-bg);
+    }
+
+    [data-theme="dark"] table tr:nth-child(even) {
+      background-color: #1a202c;
+    }
+
+    [data-theme="dark"] .hover-box {
+      color: White;
+    }
+
+    .hover-box .popup-card {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+    .feedback-list {
+        margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .feedback-content {
+        line-height: 1.6;
+        word-wrap: break-word;
+    }
+
+    /* ACTION BUTTONS */
+    .action-buttons {
+      margin: 20px 0;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+    .btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn.success {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+    }
+    .btn.success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+    }
+
+    .btn.qa {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+    .btn.qa:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      background: var(--modal-bg);
+      color: var(--modal-text);
+      width: 700px;
+      max-width: 95%;
+      margin: 4% auto;
+      padding: 24px;
+      border-radius: 12px;
+      position: relative;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .close {
+      position: absolute;
+      right: 16px;
+      top: 12px;
+      font-size: 26px;
+      cursor: pointer;
+      color: var(--text-primary);
+      transition: color 0.2s ease;
+    }
+
+    .close:hover {
+      color: #ef4444;
+    }
+
+    /* LEVEL CARDS - REPLACED DROPDOWN */
+    .level-cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .level-card {
+      background: var(--level-card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .level-card:hover {
+      background: var(--level-card-hover);
+      border-color: var(--accent-primary);
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .level-card.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border-color: #2563eb;
+      color: white;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    [data-theme="dark"] .level-card.active {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+      border-color: #0ea5e9;
+    }
+
+    .level-card .level-icon {
+      font-size: 20px;
+      margin-right: 10px;
+      display: inline-block;
+      width: 30px;
+      text-align: center;
+    }
+
+    .level-card .level-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .level-card .level-desc {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    .level-card.active .level-desc {
+      opacity: 0.9;
+    }
+
+    /* PROGRESS */
+    .progress-container {
+      background: var(--input-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px 0;
+      border: 1px solid var(--border-color);
+    }
+
+    .progress-bar {
+      background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+      color: #fff;
+      padding: 8px;
+      text-align: center;
+      font-weight: 600;
+      transition: width 0.5s ease;
+    }
+
+    /* UPLOAD MODAL - DARK THEME FIXED */
+    .upload-container {
+      margin: 20px 0;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border-color);
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      background: var(--input-bg);
+      color: var(--text-secondary);
+      transition: all 0.3s ease;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag {
+      border-color: var(--accent-primary);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .file-info {
+      margin-top: 10px;
+      padding: 12px;
+      background: var(--input-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .upload-status {
+      padding: 12px;
+      border-radius: 8px;
+      margin: 16px 0;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .upload-status.success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .upload-status.error {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .upload-status.loading {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+
+    .hidden { display: none; }
+
+    /* Project Status Styles */
+    .status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-left: 10px;
+    }
+
+    .status.active { background: #dcfce7; color: #15803d; }
+    .status.completed { background: #dbeafe; color: #1d4ed8; }
+    .status.pending { background: #fef3c7; color: #d97706; }
+    .status.on-hold { background: #f3f4f6; color: #6b7280; }
+
+    [data-theme="dark"] .status.active { background: #064e3b; color: #86efac; }
+    [data-theme="dark"] .status.completed { background: #1e3a8a; color: #93c5fd; }
+    [data-theme="dark"] .status.pending { background: #78350f; color: #fbbf24; }
+    [data-theme="dark"] .status.on-hold { background: #374151; color: #d1d5db; }
+
+    /* Timeline Styles */
+    .timeline {
+      list-style: none;
+      padding: 0;
+    }
+
+    .timeline li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .timeline li:last-child {
+      border-bottom = none;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      background: var(--input-bg);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    /* QA Post Modal Specific Styles */
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      transition: all 0.2s;
+      background: var(--input-bg);
+      color: var(--text-primary);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    [data-theme="dark"] .form-control:focus {
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    .qa-file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      background: var(--input-bg);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .qa-file-item button {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .qa-progress {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Theme Toggle -->
+  <div class="theme-toggle-container">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+      <span class="theme-icon" id="themeIcon">☀️</span>
+      <span id="themeText">Light</span>
+    </button>
+  </div>
+
+  <div id="alert-container"></div>
+
+  <div class="project-card">
+    <div class="header">
+      <h1>{{ project.project_name }}</h1>
+    </div>
+
+    <div class="section">
+      <h2 style="display:inline">Status</h2>
+      <span class="status {{ project.status|lower }}">{{ project.status.capitalize() }}</span>
+    </div>
+
+    {% if user.access_level == 'level4' %}
+        <!-- ACTION BUTTONS -->
+        <div class="action-buttons">
+          <button class="btn primary" onclick="openModal('levelModal')">
+            🎮 Update Project Level
+          </button>
+          <button class="btn success" onclick="openModal('uploadModal')">
+            📦 Upload Project Code
+          </button>
+          <!-- New QA Post Button -->
+          <button class="btn qa" onclick="openModal('qaPostModal')">
+            📋 Submit for QA
+          </button>
+          <button class="btn" onclick="openQAPortal()" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+              🔍 View QA Portal
+          </button>
+        </div>
+    {% endif %}
+
+    <!-- ================= PROJECT LEVEL MODAL (UPDATED WITH CARDS) ================= -->
+    <div id="levelModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('levelModal')">&times;</span>
+
+        <h2>🎮 Project Quest Tracker</h2>
+
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar" style="width: {{ progress|default(0) }}%">
+            {{ progress|default(0) }}%
+          </div>
+        </div>
+
+        <div class="level-cards-container">
+          <!-- Level 0 - Not Started -->
+          <div class="level-card" data-value="0" onclick="selectLevel(this, 0)">
+            <div class="level-icon">🚨</div>
+            <div>
+              <div class="level-title">Not Started</div>
+              <div class="level-desc">Project hasn't been initiated yet</div>
+            </div>
+          </div>
+
+          <!-- Level 1 - Project Understood -->
+          <div class="level-card" data-value="20" onclick="selectLevel(this, 20)">
+            <div class="level-icon">🤝</div>
+            <div>
+              <div class="level-title">Level 1 – Project Understood</div>
+              <div class="level-desc">Requirements and scope are clear</div>
+            </div>
+          </div>
+
+          <!-- Level 2 - Link Extraction -->
+          <div class="level-card" data-value="40" onclick="selectLevel(this, 40)">
+            <div class="level-icon">🔗</div>
+            <div>
+              <div class="level-title">Level 2 – Link Extraction</div>
+              <div class="level-desc">Resources and references gathered</div>
+            </div>
+          </div>
+
+          <!-- Level 3 - Data Extracted -->
+          <div class="level-card" data-value="60" onclick="selectLevel(this, 60)">
+            <div class="level-icon">📶</div>
+            <div>
+              <div class="level-title">Level 3 – Data Extracted</div>
+              <div class="level-desc">Data collection and processing complete</div>
+            </div>
+          </div>
+
+          <!-- Level 4 - QA Sent -->
+          <div class="level-card" data-value="70" onclick="selectLevel(this, 70)">
+            <div class="level-icon">💥</div>
+            <div>
+              <div class="level-title">Level 4 – QA Sent</div>
+              <div class="level-desc">Project submitted for quality assurance</div>
+            </div>
+          </div>
+
+          <!-- Level 5 - QA Done -->
+          <div class="level-card" data-value="100" onclick="selectLevel(this, 100)">
+            <div class="level-icon">👑</div>
+            <div>
+              <div class="level-title">Level 5 – QA Done</div>
+              <div class="level-desc">Quality assurance completed successfully</div>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="project-id" value="{{ project_id }}">
+        <input type="hidden" id="user-id" value="{{ user.username }}">
+        <input type="hidden" id="selected-level" value="">
+
+        <button class="btn primary" onclick="upgrade_level()" id="upgradeBtn" style="width: 100%; padding: 14px;">
+          Upgrade to Selected Level
+        </button>
+        <div id="level-message" class="upload-status" style="margin-top: 16px; display: none;"></div>
+      </div>
+    </div>
+
+    <!-- ================= UPLOAD CODE MODAL (DARK THEME FIXED) ================= -->
+    <div id="uploadModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('uploadModal')">&times;</span>
+
+        <h2>📦 Upload Project Code</h2>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+          <div class="upload-container">
+            <div id="dropZone" class="drop-zone">
+              <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+              <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">
+                Drag & Drop ZIP File
+              </div>
+              <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+                or click to browse files
+              </div>
+              <input type="file" id="project_zip" name="project_zip" accept=".zip" hidden>
+            </div>
+
+            <div id="file-name" class="file-info" style="display: none;">
+              <span id="selected-file-name"></span>
+            </div>
+          </div>
+
+          <input type="hidden" name="project_id" value="{{ project_id }}">
+          <input type="hidden" name="project_name" value="{{ project_name }}">
+          <input type="hidden" name="user_name" value="{{ username }}">
+          <input type="hidden" name="user_id" value="{{ username }}">
+
+          <button class="btn success" type="submit" id="uploadSubmitBtn" style="width: 100%; padding: 14px;">
+            Upload Code 🚀
+          </button>
+        </form>
+
+        <div id="upload-spinner" class="upload-status loading" style="display: none;">
+          ⏳ Uploading your file...
+        </div>
+        <div id="upload-message" class="upload-status" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- ================= QA POST MODAL ================= -->
+    <div id="qaPostModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('qaPostModal')">&times;</span>
+
+            <h2>📋 Submit for Quality Assurance</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                Submit your completed work for QA review. This will also update the project level to "QA Sent".
+            </p>
+
+            <form id="qaPostForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="qa_title">Project Name</label>
+                    <input type="text"
+                           id="qa_title"
+                           name="qa_title"
+                           value="{{ project.project_name }}"
+                           class="form-control"
+                           readonly
+                           style="background-color: var(--input-bg); cursor: not-allowed;">
+                </div>
+
+                <div class="form-group">
+                    <label for="qa_task_detail">Task/Module Details *</label>
+                    <input type="text"
+                           id="qa_task_detail"
+                           name="qa_task_detail"
+                           class="form-control"
+                           readonly
+                           style="background-color: var(--input-bg); cursor: not-allowed;"
+                           value="">
+                    <input type="hidden" id="qa_task_detail_hidden" name="task_details">
+                </div>
+
+                <!-- Frequency field - using project.frequency_type -->
+                <div class="form-group">
+                    <label for="qa_frequency">Frequency / Priority</label>
+                    <input type="text"
+                           id="qa_frequency"
+                           name="frequency"
+                           class="form-control"
+                           readonly
+                           style="background-color: var(--input-bg); cursor: not-allowed;"
+                           value="{{ project.frequency_type if project.frequency_type else 'On Demand' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="qa_description">Description *</label>
+                    <div id="qa-editor-container"></div>
+                    <div class="char-count">
+                        <span id="qaCharCount">0</span> characters
+                    </div>
+                    <input type="hidden" id="qa_description_hidden" name="qa_description">
+                </div>
+
+                <div class="form-group">
+                    <label for="qa_attachments">Attachments (Optional)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="qa_attachments" name="qa_attachments" multiple hidden>
+                        <label for="qa_attachments" class="file-input-label">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Click to upload files or drag and drop (Max 10 files, 50MB total)
+                        </label>
+                    </div>
+                    <div class="file-preview" id="qaFilePreview"></div>
+                </div>
+
+                <input type="hidden" name="project_id" value="{{ project.project_id }}">
+                <input type="hidden" name="developer_id" value="{{ user.username }}">
+                <input type="hidden" name="developer_name" value="{{ user.name }}">
+
+                <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                    <button type="submit" class="submit-feedback-btn" id="submitQaPostBtn" style="flex: 1; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <span class="btn-content">
+                            <span id="qaBtnText">Submit for QA Review</span>
+                        </span>
+                    </button>
+                    <button type="button" class="btn" onclick="openQAPortal()" style="flex: 0.3; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
+                        View Portal
+                    </button>
+                </div>
+            </form>
+
+            <div id="qa-post-status" class="upload-status" style="display: none; margin-top: 1rem;"></div>
+
+            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--input-bg); border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">📋 What happens after submission?</h4>
+                <ul style="margin: 0; padding-left: 1.2rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    <li>Project level will be updated to "QA Sent"</li>
+                    <li>Your submission will appear in the QA Portal</li>
+                    <li>QA testers will review your work and provide feedback</li>
+                    <li>You'll be notified when feedback is provided</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+      <h2>📌 Project Key Points</h2>
+      <ul>
+        {% for point in project.project_key_points %}
+          <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>👥 Working on this project persons:</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Task/Platform Name</th>
+            <th>Progress</th>
+            <th>Delay In Minutes</th>
+            <th>QA File Iteration Count</th>
+            <th>Code Uploaded</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for developer in working_developers_details %}
+            <tr>
+                <td class="hover-box">{{ developer.assigned_person_name }}
+                      <div class="popup-card">
+                          <p><strong>Role:</strong> {{ developer.assigned_person_position }}</p>
+                          <p><strong>Email:</strong> {{ developer.assigned_person_email }}</p>
+                      </div>
+                    </td>
+                <td>{{ developer.task_detail }}</td>
+                <td>{{ developer.project_progress }}%</td>
+                <td>{{ developer.project_delay_in_minutes }}</td>
+                <td>{{ developer.qa_iteration_count }}</td>
+                <td>{{ developer.code_uploaded }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>⏳ Timeline</h2>
+      <ul class="timeline">
+        <li><strong>Create Date:</strong> {{ project.project_created_date }}</li>
+        <li><strong>Estimated Deadline Sales:</strong> {{ project.project_estimated_date_time }}</li>
+        <li><strong>Expected Deadline Ops:</strong> {{ project.project_expected_date_time }}</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>📄 Documentation Files</h2>
+      {% for file in files %}
+          {% set filename = file.split('/')[-1].split('\\')[-1] %}
+            <div class="file-item">
+                <span class="file-name">{{ filename }}</span>
+                <a
+                  href="/download_doc/{{ project.project_id }}?file={{ file }}"
+                  class="download-btn"
+                  download
+                >
+                  Download
+                </a>
+            </div>
+      {% endfor %}
+    </div>
+
+    {% if user.position.lower() in ["project manager", "team leader", "project coordinator"] %}
+      <div class="dashboard-layout">
+          <!-- LEFT SIDE - Developer Assignment -->
+          <div class="assign-container">
+              <h3>👨‍💻 Assign Project</h3>
+              <form id="assignForm">
+                  <label for="developer">Select Developer</label>
+                  <select id="developer" name="developer" required>
+                      <option value="">-- Select Developer --</option>
+                      {% for dev in developers %}
+                          <option value="{{ dev.username }}">{{ dev.name }}</option>
+                      {% endfor %}
+                  </select>
+                  <label for="taskDetail">Task / Module to Work On</label>
+                  <textarea id="taskDetail" name="taskDetail"
+                      placeholder="Platform or Project Part"
+                      required></textarea>
+                  <button type="submit" class="assign-btn">
+                    <span>✓</span> Assign Developer
+                  </button>
+              </form>
+          </div>
+
+          <!-- RIGHT SIDE - QA Assignment -->
+          <div class="qa-assign-container">
+              <h3>🧪 QA Assignment</h3>
+              <form id="qaAssignForm">
+                  <label for="qa_tester">Select QA Tester</label>
+                  <select id="qa_tester" name="qa_tester" required>
+                      <option value="">-- Select QA Tester --</option>
+                      {% for qa in qa_testers %}
+                          <option value="{{ qa.username }}">{{ qa.name }}</option>
+                      {% endfor %}
+                  </select>
+                  <label for="qa_taskDetail">Testing Scope / Module</label>
+                  <textarea id="qa_taskDetail" name="qa_taskDetail"
+                      placeholder="Features or modules to test"
+                      required></textarea>
+                  <button type="submit" class="qa-assign-btn">
+                    <span>✓</span> Assign QA Tester
+                  </button>
+              </form>
+          </div>
+      </div>
+    {% endif %}
+
+    <!-- FEEDBACK SECTION - Below Assignment Options -->
+    <div class="feedback-section">
+      <div class="feedback-header">
+        <h2>💬 Project Feedback</h2>
+        <button type="button" class="toggle-feedback-btn" onclick="toggleFeedbackForm()">
+          <span id="toggleBtnText">Send Feedback</span>
+        </button>
+      </div>
+
+      <!-- Feedback Form -->
+      <div class="feedback-form-container" id="feedbackFormContainer">
+        <form id="feedbackForm" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="feedback_type">Feedback Type</label>
+            <select id="feedback_type" name="feedback_type" required>
+              <option value="update">📢 Update</option>
+              <option value="requirement">📋 Requirement</option>
+              <option value="doubt">❓ Doubt</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="feedback_message">Message</label>
+            <div id="feedback-editor-container"></div>
+            <div class="char-count"><span id="feedbackCharCount">0</span> characters</div>
+          </div>
+
+          <div class="form-group">
+            <label for="feedback_images">Attach Images (Optional)</label>
+            <div class="file-input-wrapper">
+              <input type="file" id="feedback_images" name="feedback_images" accept="image/*" multiple>
+              <label for="feedback_images" class="file-input-label">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Click to upload images or drag and drop
+              </label>
+            </div>
+            <div class="file-preview" id="feedbackFilePreview"></div>
+          </div>
+
+          <input type="hidden" id="feedback_project_id" name="project_id" value="{{ project.project_id }}">
+          <input type="hidden" id="feedback_sender_username" name="sender_username" value="{{ user.username }}">
+          <input type="hidden" id="feedback_sender_name" name="sender_name" value="{{ user.name }}">
+          <input type="hidden" id="feedback_message_hidden" name="message">
+
+          <button type="submit" class="submit-feedback-btn" id="submitFeedbackBtn">
+            <span class="btn-content">
+              <span id="feedbackBtnText">Send Feedback</span>
+            </span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Feedback List (to display existing feedback) -->
+      <div class="feedback-list" id="feedbackList">
+        <!-- Feedback items will be loaded here -->
+      </div>
+    </div>
+
+  </div>
+
+  <div id="imageModal" class="image-modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.9); justify-content:center; align-items:center;">
+      <span class="close-modal" onclick="closeImageModal()" style="position:absolute; top:20px; right:35px; color:white; font-size:40px; font-weight:bold; cursor:pointer;">&times;</span>
+      <img id="modalImg" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 0 20px rgba(255,255,255,0.2);">
+  </div>
+  <script>
+    // ================= GLOBAL VARIABLES =================
+    let feedbackQuill = null;
+    let feedbackFormInitialized = false;
+    let selectedFeedbackFiles = [];
+
+    let qaQuill = null;
+    let qaFormInitialized = false;
+    let qaSelectedFiles = [];
+
+    // ================= BASIC MODAL FUNCTIONS =================
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.style.display = "block";
+
+        // Initialize QA Post modal if opened
+        if (id === 'qaPostModal' && !qaFormInitialized) {
+          setTimeout(initializeQaPostForm, 100);
+        }
+      }
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.style.display = "none";
+      }
+      // Reset modal states
+      if (id === 'uploadModal') {
+        resetUploadModal();
+      } else if (id === 'qaPostModal') {
+        resetQaPostModal();
+      }
+    }
+
+    // ================= THEME FUNCTIONS =================
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+
+      const themeIcon = document.getElementById('themeIcon');
+      const themeText = document.getElementById('themeText');
+
+      if (newTheme === 'dark') {
+        themeIcon.textContent = '🌙';
+        themeText.textContent = 'Dark';
+      } else {
+        themeIcon.textContent = '☀️';
+        themeText.textContent = 'Light';
+      }
+    }
+
+    // ================= IMAGE MODAL FUNCTIONS =================
+    function openImageModal(imgSrc) {
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImg');
+      if (modal && modalImg) {
+        modal.style.display = "flex";
+        modalImg.src = imgSrc;
+      }
+    }
+
+    function closeImageModal() {
+      const modal = document.getElementById('imageModal');
+      if (modal) {
+        modal.style.display = "none";
+      }
+    }
+
+    // ================= PROJECT LEVEL FUNCTIONS =================
+    function initializeLevelCards() {
+      const currentProgress = {{ progress|default(0) }};
+      const cards = document.querySelectorAll('.level-card');
+      if (cards.length > 0) {
+        cards.forEach(card => {
+          const value = parseInt(card.getAttribute('data-value')) || 0;
+          if (value <= currentProgress) {
+            card.classList.add('active');
+          }
+        });
+      }
+    }
+
+    function selectLevel(cardElement, value) {
+      // Remove active class from all cards
+      const cards = document.querySelectorAll('.level-card');
+      cards.forEach(card => card.classList.remove('active'));
+
+      // Add active class to selected card and all previous cards
+      cards.forEach(card => {
+        const cardValue = parseInt(card.getAttribute('data-value')) || 0;
+        if (cardValue <= value) {
+          card.classList.add('active');
+        }
+      });
+
+      // Set the selected value
+      const selectedLevelInput = document.getElementById('selected-level');
+      if (selectedLevelInput) {
+        selectedLevelInput.value = value;
+      }
+
+      // Update button text
+      const levelNames = {
+        0: "Not Started",
+        20: "Level 1",
+        40: "Level 2",
+        60: "Level 3",
+        70: "Level 4",
+        100: "Level 5"
+      };
+      const upgradeBtn = document.getElementById('upgradeBtn');
+      if (upgradeBtn) {
+        upgradeBtn.textContent = `Upgrade to ${levelNames[value] || 'Selected Level'}`;
+      }
+    }
+
+    function upgrade_level() {
+      const pid = document.getElementById("project-id");
+      const selectedLevel = document.getElementById("selected-level");
+      const user = document.getElementById("user-id");
+      const messageDiv = document.getElementById("level-message");
+      const upgradeBtn = document.getElementById("upgradeBtn");
+
+      if (!pid || !selectedLevel || !user || !upgradeBtn) {
+        console.error("Required elements not found");
+        return;
+      }
+
+      const projectId = pid.value;
+      const levelValue = selectedLevel.value;
+      const userId = user.value;
+
+      if (!levelValue) {
+        if (messageDiv) {
+          messageDiv.textContent = "Please select a level first";
+          messageDiv.className = "upload-status error";
+          messageDiv.style.display = "block";
+        }
+        return;
+      }
+
+      // Disable button and show loading
+      upgradeBtn.disabled = true;
+      upgradeBtn.innerHTML = "⏳ Upgrading...";
+      if (messageDiv) {
+        messageDiv.className = "upload-status loading";
+        messageDiv.textContent = "Updating project level...";
+        messageDiv.style.display = "block";
+      }
+
+      fetch(`/gaming-zone/${levelValue}/${projectId}/${userId}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            // Update progress bar
+            const progressBar = document.getElementById("progress-bar");
+            if (progressBar) {
+              progressBar.style.width = levelValue + "%";
+              progressBar.textContent = levelValue + "%";
+            }
+
+            // Show success message
+            if (messageDiv) {
+              messageDiv.className = "upload-status success";
+              messageDiv.textContent = d.message || "Level updated successfully!";
+            }
+
+            // Reinitialize cards to reflect new progress
+            setTimeout(() => {
+              initializeLevelCards();
+            }, 500);
+          } else {
+            if (messageDiv) {
+              messageDiv.className = "upload-status error";
+              messageDiv.textContent = d.message || "Failed to update level";
+            }
+          }
+        })
+        .catch(err => {
+          console.error("Error updating level:", err);
+          if (messageDiv) {
+            messageDiv.className = "upload-status error";
+            messageDiv.textContent = "Error updating level. Please try again.";
+          }
+        })
+        .finally(() => {
+          upgradeBtn.disabled = false;
+          upgradeBtn.textContent = "Upgrade to Selected Level";
+        });
+    }
+
+    // ================= UPLOAD MODAL FUNCTIONS =================
+    function resetUploadModal() {
+      const uploadForm = document.getElementById("uploadForm");
+      const fileNameDiv = document.getElementById("file-name");
+      const uploadSpinner = document.getElementById("upload-spinner");
+      const uploadMessage = document.getElementById("upload-message");
+      const uploadSubmitBtn = document.getElementById("uploadSubmitBtn");
+
+      if (uploadForm) uploadForm.reset();
+      if (fileNameDiv) fileNameDiv.style.display = "none";
+      if (uploadSpinner) uploadSpinner.style.display = "none";
+      if (uploadMessage) uploadMessage.style.display = "none";
+      if (uploadSubmitBtn) {
+        uploadSubmitBtn.disabled = false;
+        uploadSubmitBtn.innerHTML = "Upload Code 🚀";
+      }
+    }
+
+    // ================= ALERT FUNCTION =================
+    function showAlert(message, success) {
+      const container = document.getElementById("alert-container");
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="alert ${success ? 'success' : 'danger'}">
+          ${success ? '✅' : '❌'} ${message}
+        </div>
+      `;
+
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 5000);
+    }
+
+    // ================= FEEDBACK FUNCTIONS =================
+    function initializeFeedbackForm() {
+      if (feedbackFormInitialized) return;
+
+      const editorContainer = document.getElementById('feedback-editor-container');
+      if (!editorContainer) return;
+
+      feedbackQuill = new Quill('#feedback-editor-container', {
+        theme: 'snow',
+        placeholder: 'Type your feedback here...',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'color': [] }, { 'background': [] }],
+            ['link', 'code-block'],
+            ['clean']
+          ]
+        }
+      });
+
+      // Character count
+      feedbackQuill.on('text-change', function() {
+        const text = feedbackQuill.getText().trim();
+        const charCount = document.getElementById('feedbackCharCount');
+        if (charCount) {
+          charCount.textContent = text.length;
+        }
+      });
+
+      // Submit on Ctrl/Cmd + Enter
+      feedbackQuill.root.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          const feedbackForm = document.getElementById('feedbackForm');
+          if (feedbackForm) {
+            feedbackForm.dispatchEvent(new Event('submit', { cancelable: true }));
+          }
+        }
+      });
+
+      feedbackFormInitialized = true;
+    }
+
+    function toggleFeedbackForm() {
+      const container = document.getElementById('feedbackFormContainer');
+      const btnText = document.getElementById('toggleBtnText');
+
+      if (!container || !btnText) return;
+
+      if (container.classList.contains('active')) {
+        container.classList.remove('active');
+        btnText.textContent = 'Send Feedback';
+      } else {
+        if (!feedbackFormInitialized) {
+          initializeFeedbackForm();
+        }
+        container.classList.add('active');
+        btnText.textContent = 'Hide Form';
+      }
+    }
+
+    function updateFeedbackFilePreview() {
+      const feedbackFilePreview = document.getElementById('feedbackFilePreview');
+      if (!feedbackFilePreview) return;
+
+      feedbackFilePreview.innerHTML = '';
+      selectedFeedbackFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+          <span>📎 ${file.name}</span>
+          <button type="button" onclick="removeFeedbackFile(${index})">×</button>
+        `;
+        feedbackFilePreview.appendChild(fileItem);
+      });
+    }
+
+    function removeFeedbackFile(index) {
+      selectedFeedbackFiles.splice(index, 1);
+      updateFeedbackFilePreview();
+
+      const dt = new DataTransfer();
+      selectedFeedbackFiles.forEach(file => dt.items.add(file));
+      const feedbackFileInput = document.getElementById('feedback_images');
+      if (feedbackFileInput) {
+        feedbackFileInput.files = dt.files;
+      }
+    }
+
+    async function loadFeedbacks() {
+      const projectId = "{{ project.project_id }}";
+      const feedbackList = document.getElementById('feedbackList');
+
+      if (!feedbackList) return;
+
+      try {
+        const response = await fetch(`/get-feedbacks/${projectId}`);
+        const feedbacks = await response.json();
+
+        if (!feedbacks || feedbacks.length === 0) {
+          feedbackList.innerHTML = '<p style="text-align:center; color:var(--text-secondary);">No feedback yet.</p>';
+          return;
+        }
+
+        feedbackList.innerHTML = feedbacks.map(fb => {
+          let imagesArray = [];
+          if (fb.file_paths && fb.file_paths !== "N/A") {
+            try {
+              imagesArray = typeof fb.file_paths === 'string' ? JSON.parse(fb.file_paths) : fb.file_paths;
+            } catch (e) {
+              console.error("Error parsing image JSON:", e);
+              imagesArray = [];
+            }
+          }
+
+          return `
+            <div class="section" style="margin-bottom: 1rem; border-left: 4px solid var(--accent-primary); padding: 12px; border-radius: 8px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <strong>${fb.sender_name || 'Unknown'}</strong>
+                <span class="status ${fb.type ? fb.type.toLowerCase() : ''}">${fb.type || 'Update'}</span>
+              </div>
+              <div class="feedback-content">${fb.message || ''}</div>
+
+              ${imagesArray.length > 0 ? `
+                <div class="image-preview-grid" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                  ${imagesArray.map(path => {
+                    const fileName = path.split(/[\\/]/).pop();
+                    const fileUrl = `/USER_DATA/UPDATES/${fileName}`;
+                    return `
+                      <div onclick="openImageModal('${fileUrl}')" style="cursor: pointer;">
+                        <img src="${fileUrl}"
+                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);"
+                             alt="Preview"
+                             onerror="this.src='https://via.placeholder.com/80?text=Error'">
+                      </div>`;
+                  }).join('')}
+                </div>
+              ` : ''}
+
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 12px; text-align: right;">
+                ${fb.created_at || ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error("Error loading feedbacks:", err);
+        feedbackList.innerHTML = '<p style="color:red;">Failed to load feedback.</p>';
+      }
+    }
+
+    // ================= QA POST FUNCTIONS =================
+    function initializeQaPostForm() {
+      if (qaFormInitialized) return;
+
+      const editorContainer = document.getElementById('qa-editor-container');
+      if (!editorContainer) return;
+
+      // Initialize Quill editor for QA description
+      qaQuill = new Quill('#qa-editor-container', {
+          theme: 'snow',
+          placeholder: 'Describe what you have completed, any notes for QA, testing instructions, etc...',
+          modules: {
+              toolbar: [
+                  [{ 'header': [1, 2, 3, false] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  [{ 'color': [] }, { 'background': [] }],
+                  ['link', 'code-block'],
+                  ['clean']
+              ]
+          }
+      });
+
+      // Character count for QA description
+      qaQuill.on('text-change', function() {
+          const text = qaQuill.getText().trim();
+          const charCount = document.getElementById('qaCharCount');
+          if (charCount) {
+              charCount.textContent = text.length;
+          }
+      });
+
+      // Submit on Ctrl/Cmd + Enter
+      qaQuill.root.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              const qaForm = document.getElementById('qaPostForm');
+              if (qaForm) {
+                  qaForm.dispatchEvent(new Event('submit', { cancelable: true }));
+              }
+          }
+      });
+
+      // Auto-populate task details from database
+      const taskDetailField = document.getElementById('qa_task_detail');
+      const taskDetailHidden = document.getElementById('qa_task_detail_hidden');
+
+      if (taskDetailField && taskDetailHidden) {
+          // Find the developer's task from the working_developers_details
+          const developers = {{ working_developers_details|tojson|safe }};
+          const currentUser = "{{ user.username }}";
+
+          let userTaskDetail = '';
+          for (const dev of developers) {
+              if (dev.assigned_person_username === currentUser) {
+                  userTaskDetail = dev.task_detail || '';
+                  break;
+              }
+          }
+
+          if (userTaskDetail) {
+              taskDetailField.value = userTaskDetail;
+              taskDetailHidden.value = userTaskDetail;
+          } else {
+              taskDetailField.value = 'Not assigned specific task';
+              taskDetailHidden.value = 'Not assigned specific task';
+          }
+      }
+
+      // File upload handling for QA attachments
+      const qaFileInput = document.getElementById('qa_attachments');
+      const qaFilePreview = document.getElementById('qaFilePreview');
+
+      if (qaFileInput) {
+          qaFileInput.addEventListener('change', function(e) {
+              const files = Array.from(e.target.files);
+              qaSelectedFiles = [...qaSelectedFiles, ...files];
+              updateQaFilePreview();
+          });
+
+          // Drag and drop for QA attachments
+          const dropZone = qaFileInput.parentElement.querySelector('.file-input-label');
+          if (dropZone) {
+              dropZone.addEventListener('dragover', function(e) {
+                  e.preventDefault();
+                  this.style.borderColor = '#f59e0b';
+                  this.style.background = 'var(--bg-secondary)';
+                  this.style.color = '#f59e0b';
+              });
+
+              dropZone.addEventListener('dragleave', function() {
+                  this.style.borderColor = 'var(--border-color)';
+                  this.style.background = 'var(--input-bg)';
+                  this.style.color = 'var(--text-secondary)';
+              });
+
+              dropZone.addEventListener('drop', function(e) {
+                  e.preventDefault();
+                  this.style.borderColor = 'var(--border-color)';
+                  this.style.background = 'var(--input-bg)';
+                  this.style.color = 'var(--text-secondary)';
+
+                  if (e.dataTransfer.files.length) {
+                      const files = Array.from(e.dataTransfer.files);
+                      qaSelectedFiles = [...qaSelectedFiles, ...files];
+                      updateQaFilePreview();
+
+                      // Update the file input
+                      const dt = new DataTransfer();
+                      qaSelectedFiles.forEach(file => dt.items.add(file));
+                      qaFileInput.files = dt.files;
+                  }
+              });
+          }
+      }
+      // Add this at the end of the function:
+      const qaForm = document.getElementById('qaPostForm');
+      if (qaForm) {
+        qaForm.addEventListener('submit', handleQaPostSubmit);
+      }
+    
+    qaFormInitialized = true;
+    }
+
+
+    function updateQaFilePreview() {
+        const qaFilePreview = document.getElementById('qaFilePreview');
+        if (!qaFilePreview) return;
+
+        qaFilePreview.innerHTML = '';
+
+        qaSelectedFiles.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'qa-file-item';
+
+            // Get file icon based on type
+            let fileIcon = '📄';
+            if (file.type.startsWith('image/')) fileIcon = '🖼️';
+            else if (file.type.includes('pdf')) fileIcon = '📕';
+            else if (file.type.includes('zip') || file.type.includes('compressed')) fileIcon = '📦';
+            else if (file.type.includes('code') || file.type.includes('text') ||
+                    file.name.endsWith('.js') || file.name.endsWith('.html') ||
+                    file.name.endsWith('.css') || file.name.endsWith('.py')) fileIcon = '📝';
+
+            fileItem.innerHTML = `
+                <span>${fileIcon} ${file.name} (${formatFileSize(file.size)})</span>
+                <button type="button" onclick="removeQaFile(${index})" title="Remove file">×</button>
+            `;
+            qaFilePreview.appendChild(fileItem);
+        });
+
+        if (qaSelectedFiles.length > 0) {
+            qaFilePreview.style.display = 'flex';
+        } else {
+            qaFilePreview.style.display = 'none';
+        }
+    }
+
+    function removeQaFile(index) {
+        qaSelectedFiles.splice(index, 1);
+        updateQaFilePreview();
+
+        // Update the file input
+        const qaFileInput = document.getElementById('qa_attachments');
+        const dt = new DataTransfer();
+        qaSelectedFiles.forEach(file => dt.items.add(file));
+        if (qaFileInput) {
+            qaFileInput.files = dt.files;
+        }
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function resetQaPostModal() {
+      qaSelectedFiles = [];
+      const qaForm = document.getElementById('qaPostForm');
+      const qaFileInput = document.getElementById('qa_attachments');
+      const qaFilePreview = document.getElementById('qaFilePreview');
+      const qaStatus = document.getElementById('qa-post-status');
+      const submitBtn = document.getElementById('submitQaPostBtn');
+      const qaBtnText = document.getElementById('qaBtnText');
+
+      if (qaForm) qaForm.reset();
+      if (qaFileInput) {
+        qaFileInput.value = '';
+        // Reset the file list
+        qaFileInput.files = new DataTransfer().files;
+    }
+      if (qaFilePreview) {
+          qaFilePreview.innerHTML = '';
+          qaFilePreview.style.display = 'none';
+      }
+      if (qaStatus) {
+          qaStatus.style.display = 'none';
+          qaStatus.className = 'upload-status';
+      }
+      if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+      }
+      if (qaBtnText) {
+          qaBtnText.textContent = 'Submit for QA Review';
+      }
+      if (qaQuill) {
+          qaQuill.setText('');
+          const charCount = document.getElementById('qaCharCount');
+          if (charCount) {
+              charCount.textContent = '0';
+          }
+      }
+
+      // Reset task details from database
+      const taskDetailField = document.getElementById('qa_task_detail');
+      const taskDetailHidden = document.getElementById('qa_task_detail_hidden');
+
+      if (taskDetailField && taskDetailHidden) {
+          // Re-populate from database
+          const developers = {{ working_developers_details|tojson|safe }};
+          const currentUser = "{{ user.username }}";
+
+          let userTaskDetail = '';
+          for (const dev of developers) {
+              if (dev.assigned_person_username === currentUser) {
+                  userTaskDetail = dev.task_detail || '';
+                  break;
+              }
+          }
+
+          if (userTaskDetail) {
+              taskDetailField.value = userTaskDetail;
+              taskDetailHidden.value = userTaskDetail;
+          } else {
+              taskDetailField.value = 'Not assigned specific task';
+              taskDetailHidden.value = 'Not assigned specific task';
+          }
+      }
+  }
+
+    async function handleQaPostSubmit(e) {
+        e.preventDefault();
+
+        if (!qaQuill) {
+            showAlert('Please wait for the editor to load', false);
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitQaPostBtn');
+        const qaBtnText = document.getElementById('qaBtnText');
+        const qaStatus = document.getElementById('qa-post-status');
+
+        if (!submitBtn || !qaBtnText || !qaStatus) return;
+
+        // Get HTML content from Quill
+        const htmlContent = qaQuill.root.innerHTML;
+
+        // Validate content
+        if (qaQuill.getText().trim().length === 0) {
+            showAlert('Please enter a description for QA', false);
+            return;
+        }
+
+        // Get form values
+        const qaTitle = document.getElementById('qa_title').value;
+        const qaTaskDetail = document.getElementById('qa_task_detail_hidden').value;
+        const qaFrequency = document.getElementById('qa_frequency').value;
+
+        if (!qaTitle || !qaTaskDetail) {
+            showAlert('Please fill in all required fields', false);
+            return;
+        }
+
+        // Create FormData
+        const formData = new FormData();
+        formData.append('project_name', qaTitle);
+        formData.append('project_id', "{{ project.project_id }}");
+        formData.append('description', htmlContent);
+        formData.append('frequency', qaFrequency);
+        formData.append('task_details', qaTaskDetail);
+
+        // Add files to FormData
+        if (qaSelectedFiles.length > 0) {
+            qaSelectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+        }
+
+        // Disable submit button and show loading
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.7';
+        qaBtnText.innerHTML = '<span class="spinner"></span> Submitting...';
+
+        qaStatus.style.display = 'block';
+        qaStatus.className = 'upload-status loading';
+        qaStatus.textContent = 'Submitting QA post...';
+
+        try {
+            const response = await fetch('/qa-posts', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+
+            let result;
+            try {
+                result = await response.json();
+            } catch (parseError) {
+                console.error('Error parsing response:', parseError);
+                throw new Error('Server returned invalid response');
+            }
+
+            if (response.ok && result.status === 'ok') {
+                qaStatus.className = 'upload-status success';
+                qaStatus.textContent = '✅ QA post submitted successfully!';
+
+                // Also update project level to "QA Sent" (level 4)
+                await updateProjectToQASent();
+
+                // Reset form
+                resetQaPostModal();
+
+                // Auto-close modal after 2 seconds
+                setTimeout(() => {
+                    closeModal('qaPostModal');
+                    showAlert('QA post submitted successfully! Project level updated to QA Sent.', true);
+                }, 2000);
+            } else {
+                qaStatus.className = 'upload-status error';
+                qaStatus.textContent = result.error || '❌ Failed to submit QA post';
+                showAlert(result.error || 'Failed to submit QA post', false);
+            }
+        } catch (error) {
+            console.error('Error submitting QA post:', error);
+            qaStatus.className = 'upload-status error';
+            qaStatus.textContent = '❌ Network error. Please try again.';
+            showAlert('Network error. Please try again.', false);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            qaBtnText.textContent = 'Submit for QA Review';
+        }
+    }
+
+    async function updateProjectToQASent() {
+        try {
+            const projectId = "{{ project_id }}";
+            const userId = "{{ user.username }}";
+
+            const response = await fetch(`/gaming-zone/70/${projectId}/${userId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('Project level updated to QA Sent');
+                // Update progress bar
+                const progressBar = document.getElementById('progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = '70%';
+                    progressBar.textContent = '70%';
+                }
+                // Update level cards
+                initializeLevelCards();
+            }
+        } catch (error) {
+            console.error('Error updating project level:', error);
+        }
+    }
+
+    // ================= QA PORTAL REDIRECT =================
+    function openQAPortal() {
+        window.open('/qa-portal', '_blank');
+    }
+
+    // ================= MAIN INITIALIZATION =================
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize theme
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+
+      const themeIcon = document.getElementById('themeIcon');
+      const themeText = document.getElementById('themeText');
+
+      if (themeIcon && themeText) {
+        if (savedTheme === 'dark') {
+          themeIcon.textContent = '🌙';
+          themeText.textContent = 'Dark';
+        } else {
+          themeIcon.textContent = '☀️';
+          themeText.textContent = 'Light';
+        }
+      }
+
+      // Initialize level cards
+      initializeLevelCards();
+
+      // Close modal if clicking outside
+      window.onclick = function(event) {
+        const imageModal = document.getElementById('imageModal');
+        if (event.target == imageModal) {
+          closeImageModal();
+        }
+
+        // Close other modals when clicking outside
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+          if (event.target == modal) {
+            modal.style.display = "none";
+          }
+        });
+      };
+
+      // ================= UPLOAD FUNCTIONALITY =================
+      const dz = document.getElementById("dropZone");
+      const fi = document.getElementById("project_zip");
+      const fileNameDiv = document.getElementById("file-name");
+      const selectedFileName = document.getElementById("selected-file-name");
+      const uploadForm = document.getElementById("uploadForm");
+      const uploadSubmitBtn = document.getElementById("uploadSubmitBtn");
+      const uploadSpinner = document.getElementById("upload-spinner");
+      const uploadMessage = document.getElementById("upload-message");
+
+      if (dz && fi) {
+        // Click to select file
+        dz.onclick = () => fi.click();
+
+        // Drag and drop functionality
+        dz.ondragover = (e) => {
+          e.preventDefault();
+          dz.classList.add("drag");
+        };
+
+        dz.ondragleave = () => dz.classList.remove("drag");
+
+        dz.ondrop = (e) => {
+          e.preventDefault();
+          dz.classList.remove("drag");
+          if (e.dataTransfer.files.length) {
+            fi.files = e.dataTransfer.files;
+            updateFileName();
+          }
+        };
+
+        // File input change
+        fi.onchange = updateFileName;
+
+        function updateFileName() {
+          if (fi.files.length) {
+            const fileName = fi.files[0].name;
+            if (selectedFileName) {
+              selectedFileName.textContent = `📄 Selected: ${fileName}`;
+            }
+            if (fileNameDiv) {
+              fileNameDiv.style.display = "block";
+            }
+          } else {
+            if (fileNameDiv) {
+              fileNameDiv.style.display = "none";
+            }
+          }
+        }
+
+        // Form submission
+        if (uploadForm) {
+          uploadForm.onsubmit = async (e) => {
+            e.preventDefault();
+
+            if (!fi.files.length) {
+              showAlert("Please select a ZIP file first", false);
+              return;
+            }
+
+            // Disable submit button and show spinner
+            if (uploadSubmitBtn) {
+              uploadSubmitBtn.disabled = true;
+              uploadSubmitBtn.innerHTML = "⏳ Uploading...";
+            }
+            if (uploadSpinner) {
+              uploadSpinner.style.display = "block";
+            }
+            if (uploadMessage) {
+              uploadMessage.style.display = "none";
+            }
+
+            try {
+              const response = await fetch("/upload-code", {
+                method: "POST",
+                body: new FormData(uploadForm)
+              });
+
+              const data = await response.json();
+
+              // Show message
+              if (uploadMessage) {
+                uploadMessage.textContent = data.message || "Upload completed";
+                uploadMessage.className = `upload-status ${data.success ? 'success' : 'error'}`;
+                uploadMessage.style.display = "block";
+              }
+              if (uploadSpinner) {
+                uploadSpinner.style.display = "none";
+              }
+
+              if (data.success) {
+                // Reset form on success
+                uploadForm.reset();
+                if (fileNameDiv) {
+                  fileNameDiv.style.display = "none";
+                }
+
+                // Auto-close modal after 2 seconds
+                setTimeout(() => {
+                  closeModal('uploadModal');
+                }, 2000);
+              }
+            } catch (err) {
+              console.error("Upload error:", err);
+              if (uploadMessage) {
+                uploadMessage.textContent = "Upload failed. Please try again.";
+                uploadMessage.className = "upload-status error";
+                uploadMessage.style.display = "block";
+              }
+              if (uploadSpinner) {
+                uploadSpinner.style.display = "none";
+              }
+            } finally {
+              if (uploadSubmitBtn) {
+                uploadSubmitBtn.disabled = false;
+                uploadSubmitBtn.innerHTML = "Upload Code 🚀";
+              }
+            }
+          };
+        }
+      }
+      document.getElementById("assignForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const developer = document.getElementById("developer").value;
+        const task = document.getElementById("taskDetail").value;
+        const projectId = "{{ project.project_id }}";
+        const assignerUser = "{{ user.username }}";
+        if (!developer || !task) {
+            showAlert("Please fill all fields", false);
+            return;
+        }
+        const formData = new FormData();
+        formData.append("project_id", projectId);
+        formData.append("developer_id", developer);
+        formData.append("task_detail", task);
+        formData.append("assigner_username", assignerUser);
+
+        try {
+            const response = await fetch("/assign-project", {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+            if (data.assigned) {
+                alert(data.message);
+                document.getElementById("assignForm").reset();
+            }
+        } catch (err) {
+            console.log(err);
+            alert(data.message);
+        }
+    });
+      // ================= FEEDBACK FORM INITIALIZATION =================
+      const feedbackFileInput = document.getElementById('feedback_images');
+      const feedbackFilePreview = document.getElementById('feedbackFilePreview');
+
+      if (feedbackFileInput) {
+        feedbackFileInput.addEventListener('change', function(e) {
+          const files = Array.from(e.target.files);
+          selectedFeedbackFiles = [...selectedFeedbackFiles, ...files];
+          updateFeedbackFilePreview();
+        });
+      }
+
+      // Feedback form submission
+      const feedbackForm = document.getElementById('feedbackForm');
+      if (feedbackForm) {
+        feedbackForm.addEventListener('submit', async function(event) {
+          event.preventDefault();
+
+          const submitBtn = document.getElementById('submitFeedbackBtn');
+          const btnText = document.getElementById('feedbackBtnText');
+
+          if (!feedbackQuill || !submitBtn || !btnText) return;
+
+          const htmlContent = feedbackQuill.root.innerHTML;
+
+          if (feedbackQuill.getText().trim().length === 0) {
+            showAlert('Please enter a message', false);
+            return;
+          }
+
+          const messageHidden = document.getElementById('feedback_message_hidden');
+          if (messageHidden) {
+            messageHidden.value = htmlContent;
+          }
+
+          const formData = new FormData(feedbackForm);
+          formData.delete('feedback_images');
+          selectedFeedbackFiles.forEach(file => {
+            formData.append('feedback_images', file);
+          });
+
+          submitBtn.disabled = true;
+          btnText.innerHTML = '<span class="spinner"></span> Sending...';
+
+          try {
+            const response = await fetch('/send-communication', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            showAlert(result.message || 'Feedback sent successfully!', result.success !== false);
+
+            if (result.success !== false) {
+                feedbackForm.reset();
+                feedbackQuill.setText('');
+                selectedFeedbackFiles = [];
+                updateFeedbackFilePreview();
+                const charCount = document.getElementById('feedbackCharCount');
+                if (charCount) {
+                  charCount.textContent = '0';
+                }
+                toggleFeedbackForm();
+                loadFeedbacks();
+            }
+          } catch (err) {
+            console.error(err);
+            showAlert('Something went wrong. Please try again.', false);
+          } finally {
+            submitBtn.disabled = false;
+            btnText.textContent = 'Send Feedback';
+          }
+        });
+      }
+
+      // ================= QA POST FORM SETUP =================
+      const qaForm = document.getElementById('qaPostForm');
+      if (qaForm) {
+        qaForm.addEventListener('submit', handleQaPostSubmit);
+      }
+
+      // Load feedbacks on page load
+      loadFeedbacks();
+    });
+
+    // ================= GLOBAL WINDOW FUNCTIONS =================
+    window.toggleFeedbackForm = toggleFeedbackForm;
+    window.removeFeedbackFile = removeFeedbackFile;
+    window.openImageModal = openImageModal;
+    window.closeImageModal = closeImageModal;
+    window.selectLevel = selectLevel;
+    window.upgrade_level = upgrade_level;
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.toggleTheme = toggleTheme;
+    window.removeQaFile = removeQaFile;
+    window.openQAPortal = openQAPortal;
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Developer Project Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+    }
+    .container {
+      max-width: 960px;
+    }
+    .project-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    .project-list::-webkit-scrollbar-track {
+      background: #e0e0e0;
+      border-radius: 10px;
+    }
+    .project-list::-webkit-scrollbar-thumb {
+      background: #a0a0a0;
+      border-radius: 10px;
+    }
+    .project-list::-webkit-scrollbar-thumb:hover {
+      background: #888;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+  <div class="container mx-auto bg-white shadow-xl rounded-xl p-6 md:p-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Developer Project Overview</h1>
+    <div id="developer-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </div>
+
+  <script>
+    // Get head_person_id from FastAPI via Jinja templating
+    const head_person_id = "{{ head_person_id }}";
+
+    async function fetchAndRenderDashboard() {
+      try {
+        const res = await fetch(`/developers--see/${head_person_id}`);
+        const developers = await res.json();
+
+        const developerListContainer = document.getElementById('developer-list');
+        developerListContainer.innerHTML = '';
+
+        developers.forEach(developer => {
+          const developerCard = document.createElement('div');
+          developerCard.className = 'bg-gray-50 p-5 rounded-lg shadow-md border border-gray-200';
+
+          const header = document.createElement('div');
+          header.className = 'flex items-center justify-between mb-3 pb-3 border-b border-gray-200';
+          header.innerHTML = `
+            <h2 class="text-xl font-semibold text-gray-700">${developer.name}</h2>
+            <span class="bg-blue-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-sm">
+              ${developer.projects.length} Projects
+            </span>
+          `;
+          developerCard.appendChild(header);
+
+          const projectList = document.createElement('ul');
+          projectList.className = 'space-y-2 project-list max-h-48 overflow-y-auto pr-2';
+          if (developer.projects.length === 0) {
+            projectList.innerHTML = '<li class="text-gray-500 italic">No projects assigned.</li>';
+          } else {
+            developer.projects.forEach(project => {
+              let statusColor = '';
+              switch (project.status) {
+                case '70': statusColor = 'text-blue-600'; break;
+                case '90': statusColor = 'text-green-600'; break;
+                case '100': statusColor = 'text-green-600'; break;
+                case '40': statusColor = 'text-yellow-600'; break;
+                case '60': statusColor = 'text-yellow-600'; break;
+                case '0': statusColor = 'text-red-600'; break;
+                default: statusColor = 'text-gray-600';
+              }
+              const projectItem = document.createElement('li');
+              projectItem.className = 'flex justify-between text-gray-700 text-base gap-2 flex-wrap border-b border-gray-200 pb-2 mb-2';
+              projectItem.innerHTML = `
+                  <span class="flex-1 break-words before:content-['🟠'] before:mr-1">${project.name}</span>
+                  <span class="font-medium ${statusColor}">${project.status}% Completed</span>
+                `;
+              projectList.appendChild(projectItem);
+            });
+          }
+
+          developerCard.appendChild(projectList);
+          developerListContainer.appendChild(developerCard);
+        });
+
+      } catch (error) {
+        console.error("Failed to load developer data:", error);
+      }
+    }
+
+    window.onload = fetchAndRenderDashboard;
+  </script>
+</body>
+</html>

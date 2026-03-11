@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="top-bar">
+  <div class="logo">
+    📂 <span>Project Portal</span>
+  </div>
+
+  <div class="user-info">
+    Welcome, {{ name }}
+  </div>
+</header>
+
+<hr class="divider">
+
+<!-- ================= FILTER BAR ================= -->
+<section class="filters">
+  <div class="filter-group">
+    <label>Frequency</label>
+    <select id="frequencyFilter">
+      <option value="">All</option>
+      <option value="once-off">Once-Off</option>
+      <option value="monthly">Monthly</option>
+      <option value="weekly">Weekly</option>
+      <option value="alternate">Alternate</option>
+      <option value="daily">Daily</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label>Search</label>
+    <input type="text" id="searchInput" placeholder="Search project...">
+  </div>
+
+  <div class="dark-toggle">🌙 Dark Mode</div>
+</section>
+
+<!-- ================= CONTENT ================= -->
+<section class="content">
+  <h2>Projects Details</h2>
+
+  <div class="cards-grid" id="projectGrid">
+
+    {% for project in projects %}
+    <div
+      class="project-card"
+      data-name="{{ project.project_name | lower }}"
+      data-frequency="{{ project.frequency_type | lower }}"
+    >
+
+      <div class="card-category">
+        {{ project.frequency_type }}
+      </div>
+      {% if access_level == 'level4' %}
+        <div class="card-author">
+          Task: {{ project.task_detail }}
+        </div>
+      {% endif %}
+
+      <h3 class="card-title">
+        <a href="/info_project/{{ project.project_id }}">
+          {{ project.project_name }}
+        </a>
+      </h3>
+
+      <!--{% if access_level in ['level4', 'level3'] %}
+      <div class="progress-container">
+        <div class="progress-bar" style="width: {{ project.project_progress or 0 }}%">
+          {{ project.project_progress or 0 }}%
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card-footer">
+        <span><strong>Frequency:</strong> {{ project.frequency_type }}</span>
+        {% if access_level in ['level4', 'level3'] %}
+        <a href="/project-level/{{ project.project_id }}">🎯 Progress</a>
+        <a href="/code-area/{{ project.project_name }}/{{ project.project_id }}/{{ project.task_detail }}">
+          🍾 Code
+        </a>
+        {% endif %}
+      </div>
+-->
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+<script>
+/* ================= DARK MODE ================= */
+const body = document.body;
+const toggle = document.querySelector(".dark-toggle");
+
+if (localStorage.getItem("dark") === "true") {
+  body.classList.add("dark");
+}
+
+toggle.onclick = () => {
+  body.classList.toggle("dark");
+  localStorage.setItem("dark", body.classList.contains("dark"));
+};
+
+/* ================= SEARCH + FILTER ================= */
+const searchInput = document.getElementById("searchInput");
+const frequencyFilter = document.getElementById("frequencyFilter");
+const cards = document.querySelectorAll(".project-card");
+
+function filterProjects() {
+  const search = searchInput.value.toLowerCase();
+  const freq = frequencyFilter.value.toLowerCase();
+
+  cards.forEach(card => {
+    const name = card.dataset.name;
+    const frequency = card.dataset.frequency;
+
+    const matchSearch = name.includes(search);
+    const matchFreq = !freq || frequency === freq;
+
+    card.style.display = matchSearch && matchFreq ? "block" : "none";
+  });
+}
+
+searchInput.addEventListener("input", filterProjects);
+frequencyFilter.addEventListener("change", filterProjects);
+</script>
+
+</body>
+</html>

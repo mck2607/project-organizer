@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manager Dashboard</title>
+  <link rel="stylesheet" href="/static/manager_todo_dash2.css">
+</head>
+<body>
+  <div class="dashboard">
+    <a id="show_todo_page" href="/my-to-do">My ToDo</a>
+    <div class="sidebar">
+      <h2>Developers</h2>
+      <ul class="dev-list" id="devList">
+        {% for dev in developers %}
+          <li class="dev" data-id="{{ dev.username }}">{{ dev.name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <main class="main">
+      <section class="dev-board active">
+        <h2 id="devName">Select a developer</h2>
+        <div class="columns" id="todoContainer"></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const devList = document.getElementById("devList");
+    const devName = document.getElementById("devName");
+    const todoContainer = document.getElementById("todoContainer");
+
+    // Function to normalize status names
+    function normalizeStatus(status) {
+      if (!status) return "To Do";
+
+      const statusMap = {
+        'todo': 'To Do',
+        'to do': 'To Do',
+        'pending': 'To Do',
+        'backlog': 'To Do',
+        'in progress': 'In Progress',
+        'in_progress': 'In Progress',
+        'in-progress': 'In Progress',
+        'progress': 'In Progress',
+        'working': 'In Progress',
+        'development': 'In Progress',
+        'done': 'Done',
+        'completed': 'Done',
+        'finished': 'Done',
+        'closed': 'Done',
+        'complete': 'Done'
+      };
+
+      return statusMap[status.toLowerCase()] || status;
+    }
+
+    devList.addEventListener("click", async (e) => {
+      if (e.target && e.target.classList.contains("dev")) {
+        // Remove active class from all devs
+        document.querySelectorAll(".dev").forEach(dev => dev.classList.remove("active"));
+        // Add active class to clicked dev
+        e.target.classList.add("active");
+
+        const userId = e.target.getAttribute("data-id");
+        const name = e.target.innerText;
+        devName.textContent = name + " - Todos";
+        todoContainer.innerHTML = '<div class="loading">Loading...</div>';
+
+        try {
+          console.log(`Fetching todos for URL: /api/todos2/${userId}`); // Debugging log
+          const res = await fetch(`/api/todos2/${userId}`);
+
+          // 1. Check if the server responded with OK (Status 200-299)
+          if (!res.ok) {
+            throw new Error(`Server Error: ${res.status} ${res.statusText}`);
+          }
+
+          const todos = await res.json();
+
+          // 2. Check if the response is actually an array before trying to reduce it
+          if (!Array.isArray(todos)) {
+            console.error("API response is not an array:", todos);
+            todoContainer.innerHTML = "<p>Invalid data received from server.</p>";
+            return;
+          }
+
+          if (todos.length === 0) {
+            todoContainer.innerHTML = "<p>No todos found.</p>";
+            return;
+          }
+
+          // Group todos by status
+          const todosByStatus = todos.reduce((acc, todo) => {
+            const status = normalizeStatus(todo.status);
+            if (!acc[status]) acc[status] = [];
+            acc[status].push(todo);
+            return acc;
+          }, {});
+
+          // Clear container
+          todoContainer.innerHTML = "";
+
+          // Define status order and create sections
+          const statusOrder = ["To Do", "In Progress", "Done"];
+          const statusConfig = {
+            "To Do": {
+              class: "todo-section",
+              color: "#74b9ff",
+              icon: "📋"
+            },
+            "In Progress": {
+              class: "progress-section",
+              color: "#fdcb6e",
+              icon: "⚡"
+            },
+            "Done": {
+              class: "done-section",
+              color: "#00b894",
+              icon: "✅"
+            }
+          };
+
+          // Create columns for each status
+          statusOrder.forEach(status => {
+            const statusTodos = todosByStatus[status] || [];
+            const config = statusConfig[status];
+
+            // Create column
+            const column = document.createElement("div");
+            column.className = "column";
+
+            // Create tasks HTML
+            let tasksHTML = "";
+            if (statusTodos.length > 0) {
+              tasksHTML = statusTodos.map(todo => `
+                <div class="task">
+                  <h4 class="title">${todo.todo_title || "Untitled Task"}</h4>
+                  ${todo.todo_descr ? `<p>${todo.todo_descr}</p>` : ''}
+                  <div class="meta"><strong>Created At:</strong> ${todo.todo_created_date || "No date"}</div>
+                  ${todo.priority ? `<div class="priority priority-${todo.priority.toLowerCase()}">${todo.priority}</div>` : ''}
+                  ${todo.todo_completed_date ? `<div class="meta"><strong>Completed At:</strong> ${todo.todo_completed_date}</div>` : ''}
+                </div>
+              `).join("");
+            } else {
+              tasksHTML = `
+                <div class="empty-section">
+                  <div class="empty-icon">${config.icon}</div>
+                  <div class="empty-text">No ${status.toLowerCase()} tasks</div>
+                </div>
+              `;
+            }
+
+            column.innerHTML = `
+              <div class="column-header" style="border-left: 4px solid ${config.color}">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                  ${config.icon} ${status}
+                </span>
+                <span class="task-count">${statusTodos.length}</span>
+              </div>
+              <div class="tasks">
+                ${tasksHTML}
+              </div>
+            `;
+
+            todoContainer.appendChild(column);
+          });
+
+          // Add any todos with unrecognized status to a separate section
+          const recognizedStatuses = statusOrder;
+          const otherStatuses = Object.keys(todosByStatus).filter(status =>
+            !recognizedStatuses.includes(status)
+          );
+
+          otherStatuses.forEach(status => {
+            const statusTodos = todosByStatus[status];
+            const column = document.createElement("div");
+            column.className = "column";
+
+            const tasksHTML = statusTodos.map(todo => `
+              <div class="task">
+                <div class="title">${todo.todo_title || "Untitled Task"}</div>
+                <div class="meta">${todo.todo_created_date || "No date"}</div>
+              </div>
+            `).join("");
+
+            column.innerHTML = `
+              <div class="column-header" style="border-left: 4px solid #a29bfe">
+                <span>${status}</span>
+                <span class="task-count">${statusTodos.length}</span>
+              </div>
+              <div class="tasks">
+                ${tasksHTML}
+              </div>
+            `;
+
+            todoContainer.appendChild(column);
+          });
+
+        } catch (err) {
+          console.error(err);
+          // Display the specific error message on screen
+          todoContainer.innerHTML = `<p style='color:red;'>Failed to load todos: ${err.message}</p>`;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Actowiz{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/home.css">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<style>
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: -400px;
+        width: 320px;
+        background: #1f2937;
+        color: #fff;
+        padding: 14px 16px;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,.2);
+        transition: right .3s ease;
+        z-index: 9999;
+        cursor: pointer;
+    }
+
+    .toast.show {
+        right: 20px;
+    }
+
+</style>
+<body data-user-id="{{ user_username }}">
+
+<!-- 🔔 Notification sound -->
+<audio id="notificationSound">
+    <source src="/static/sounds/slack.mp3" type="audio/mpeg">
+</audio>
+
+<aside>
+    <div class="user-profile">
+        <div class="avatar">{{ user_initials }}</div>
+        <div class="user-info">
+            <h4>{{ user_name }}</h4>
+            <span>{{ user_position }}</span>
+        </div>
+    </div>
+
+    <ul class="nav-links">
+        <li class="nav-item">
+            <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">
+                <i class="fa-solid fa-border-all"></i> Dashboard
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="/my-to-do">
+                <i class="fa-solid fa-list-check"></i> My To Do's
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="/dashboard">
+                <i class="fa-regular fa-folder-open"></i> Projects
+            </a>
+        </li>
+        {% if (user_access == 'level2') or ('sale' in user_position) %}
+                <li class="nav-item">
+                    <a href="/project-form">
+                        <i class="fa-regular fa-folder-open"></i> Project Form
+                    </a>
+                </li>
+        {% endif %}
+        <li class="nav-item">
+            <a href="/qa-portal">
+                <i class="fas fa-code-branch"></i> QA Portal
+            </a>
+        </li>
+        {% if user_access in ['level2', 'level3'] and 'sales' not in user_position %}
+            <li class="nav-item">
+                <a href="/all-developer-project-to-do">
+                    <i class="fa fa-users"></i> Team Dashboard
+                </a>
+            </li>
+        {% endif %}
+        {% if user_access == "level1"%}
+            <li class="nav-item">
+                <a href="/add-user">
+                    <i class="fa fa-user"></i> Add User
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/all_employee">
+                    <i class="fa-solid fa-book-open"></i> All Employee
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/projects_all">
+                    <i class="fa-solid fa-book-open"></i> All Projects
+                </a>
+            </li>
+        {% endif %}
+        <li class="nav-item">
+            <a href="/knowledge-hub">
+                <i class="fa-solid fa-book-open"></i> Knowledge Hub
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/notifications">
+                <i class="fa-regular fa-bell"></i> Notifications
+                <span class="badge" id="notificationCount">0</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="/profile/{{ user_username }}">
+                <i class="fa fa-user"></i> Profile
+            </a>
+        </li>
+    </ul>
+
+    <div class="logout">
+        <a href="/logout">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Log out
+        </a>
+    </div>
+</aside>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- 🌍 GLOBAL NOTIFICATION SCRIPT -->
+<script src="/static/notifications.js"></script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

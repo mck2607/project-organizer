@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup - Employee Form</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='signup.css') }}" />
+</head>
+<body>
+  <div class="signup-container">
+    <h2>Employee Signup</h2>
+
+    {% if success == True  %}
+        <div class="alert success">
+          ✅ Signup successful! You can now <a href="/login">login</a>.
+        </div>
+    {% elif success == False  %}
+          <div class="alert danger">
+            ❌ Signup failed. Please check your details and try again.
+          </div>
+    {% endif %}
+
+    <form action="/signup-form" method="post" novalidate>
+      <div class="form-group">
+        <label for="username">Employee ID</label>
+        <input type="text" id="username" name="username" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password <small>(max 8 chars)</small></label>
+        <input type="password" id="password" name="password" maxlength="8" required />
+      </div>
+
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" required />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" required />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" maxlength="10" />
+      </div>
+      <div class="form-group">
+        <label for="department">Department <span class="required-note">*</span></label>
+        <select id="department" name="department" required>
+          <option value="">-- Select Department --</option>
+          <option value="operation">Operation</option>
+          <option value="sales">Sales</option>
+          <option value="rnd">Research & Development</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="position">Position <span class="required-note">*</span></label>
+        <select id="position" name="position" required>
+          <option value="">-- Select Position --</option>
+          <option value="python developer consultant">Python Developer Consultant</option>
+          <option value="senior python developer">Senior Python Developer</option>
+          <option value="project manager">Project Manager</option>
+          <option value="team leader">Team Leader</option>
+          <option value="project coordinator">Project Coordinator</option>
+          <option value="rnd developer">Research & Development Person</option>
+          <option value="quality analyst person">Quality Analyst Person</option>
+          <option value="sales executive">Sales Executive</option>
+          <option value="sales manager">Sales Manager</option>
+          <option value="hr">Human Resource Management Person</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="date_joined">Date of Join</label>
+        <input type="date" id="date_joined" name="date_joined" required />
+      </div>
+
+      <button type="submit">Signup</button>
+    </form>
+  </div>
+</body>
+</html>

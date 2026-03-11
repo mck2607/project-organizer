@@ -1,0 +1,347 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f4f8;
+    margin: 0;
+    padding: 1rem;
+    color: #1f2937;
+}
+
+.project-card {
+    max-width: 80%;
+    margin: auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.project-card h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+    color: #111827;
+}
+
+.status {
+    padding: 0.3rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.status.pending { background-color: #fde68a; color: #92400e; }
+.status.done { background-color: #8AFD94; color: #024527; }
+.status.ongoing { background-color: #bae6fd; color: #0369a1; }
+
+.section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+}
+
+.section p, .section ul {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+ul.assigned-info,
+ul.timeline {
+    list-style: none;
+    padding: 0;
+}
+
+.download-btn {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    background-color: #10b981;
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.3s ease;
+}
+
+.download-btn:hover {
+    background-color: #059669;
+}
+
+.actions form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.actions select,
+.actions button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.actions button {
+    background-color: #3b82f6;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.actions button:hover {
+    background-color: #2563eb;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .actions form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .download-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+/* Progress Bar */
+.progress-container {
+  background-color: #e5e7eb;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #3b82f6;
+  text-align: right;
+  padding-right: 6px;
+  color: white;
+  font-size: 10px;
+  line-height: 12px;
+  transition: width 0.4s ease-in-out;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th, table td {
+  text-align: left;
+  padding: 8px;
+  vertical-align: top;
+}
+
+table th {
+  background-color: #f9fafb;
+}
+
+table tr:nth-child(even) {
+  background-color: #f3f4f6;
+}
+
+
+.hover-box {
+  position: relative;
+  cursor: pointer;
+  color: #0073e6;
+  font-weight: 600;
+}
+
+/* Hidden popup */
+.popup-card {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  background: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  min-width: 200px;
+  font-size: 14px;
+  transition: all 0.3s ease-in-out;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Smooth fade-in on hover */
+.hover-box:hover .popup-card {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(5px);
+}
+/* ----------------------------------------------------------------------*/
+/* MAIN LAYOUT */
+.dashboard-layout {
+    display: flex;
+    width: 100%;
+    gap: 30px;         /* Space between left and right side */
+    margin-top: 20px;
+}
+
+/* LEFT SIDE WIDTH */
+.left-panel {
+    width: 360px;      /* Adjust as needed */
+}
+
+/* RIGHT SIDE GROWS */
+.right-panel {
+    flex-grow: 1;      /* Takes remaining space */
+}
+
+
+
+/* ASSIGN CARD */
+.assign-container {
+    background: #fff;
+    padding: 20px 24px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    font-family: "Inter", sans-serif;
+}
+
+/* Heading */
+.assign-container h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    color: #222;
+}
+
+/* Labels */
+.assign-container label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* Inputs */
+.assign-container select,
+.assign-container textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    background: #fafafa;
+    margin-bottom: 14px;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.assign-container select:focus,
+.assign-container textarea:focus {
+    border-color: #3b82f6;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(59,130,246,0.25);
+    outline: none;
+}
+
+.assign-container textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/* Button */
+.assign-btn {
+    width: 100%;
+    padding: 10px 0;
+    background: #3b82f6;
+    border: none;
+    color: white;
+    font-size: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.assign-btn:hover {
+    background: #2563eb;
+}
+
+/*_________________________New CSS for modal project level & code upload_______________*/
+<style>
+.action-buttons {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn.primary {
+  background: #6366f1;
+  color: white;
+}
+
+.btn.success {
+  background: #16a34a;
+  color: white;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 9999;
+}
+
+.modal-content {
+  background: white;
+  width: 90%;
+  max-width: 1000px;
+  margin: 5% auto;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.modal-content.large {
+  height: 85vh;
+}
+
+.modal-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.close {
+  position: absolute;
+  right: 16px;
+  top: 10px;
+  font-size: 26px;
+  cursor: pointer;
+  z-index: 10;
+}
+

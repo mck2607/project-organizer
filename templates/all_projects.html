@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Project Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/all_projects.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="theme-toggle">
+    <button id="toggle-theme">☾☼ Theme</button>
+  </div>
+
+  <div class="container">
+    <h1>☕︎ Project List</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Project Name</th>
+          <th>Project Status</th>
+          <th>Project Frequency</th>
+          <th>Platform Type</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for each_data in data %}
+        <tr>
+          <td>{{ each_data.project_name }}</td>
+          <td>{{ each_data.status }}</td>
+          <td>{{ each_data.frequency_type }}</td>
+          <td>{{ each_data.platform_type }}</td>
+          <td><a href="/view-form-project/{{ each_data.project_id }}" class="assign-btn">⛩️ Assign</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const toggleBtn = document.getElementById("toggle-theme");
+    toggleBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    });
+
+    window.onload = () => {
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+      }
+    };
+  </script>
+</body>
+</html>
