@@ -26,8 +26,9 @@ This project is designed to:
 - **Team Leaders** who want a transparent view of project flow and collaboration  
 
 ## 🧰 Tech Stack
-
-> *(List your technologies here — for example: Python, Django, React, MySQL, etc.)*
+- Database: postgresql
+- Language: Python, JavaScript, HTML, CSS
+- Backend:  FastApi
 
 ## 📦 Installation
 
