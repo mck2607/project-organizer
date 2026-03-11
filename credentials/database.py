@@ -19,12 +19,7 @@ todo_esclation_table = 'todo_esclation_table'
 todo_master_table = 'todo_master_table'
 #---------------------------
 
-
-# Example: "postgresql+asyncpg://username:password@localhost:5432/dbname"
-DATABASE_URL = f"postgresql+asyncpg://postgres:actowiz@localhost:5432/{DB_NAME}"
-# DATABASE_URL = f"mysql+aiomysql://root:actowiz@localhost:3306/{DB_NAME}"
-
-
+DATABASE_URL = f"postgresql+asyncpg://postgres:YOUR_PASSWORD@localhost:5432/{DB_NAME}"
 
 # --------------------------
 # 1. Create async engine with pool size

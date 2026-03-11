@@ -13,9 +13,9 @@ async def insert_first_user():
     async for db_con in db.get_db():  
         input_pass = str(db.hash_string('12345678'))
         position = 'ceo'
-        username = 'Act000'
-        name = "Kunal Santani"
-        email = "ceo@gmail.com"
+        username = 'JOH123'
+        name = "John Deo"
+        email = "john@gmail.com"
         department = "Operation"
         # --------------
         access_level = "level4"

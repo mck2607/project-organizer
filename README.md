@@ -33,3 +33,11 @@ This project is designed to:
 ## 📦 Installation
 
 pip install -r requirements.txt
+
+
+##  Steps To Run
+
+- First run `generate_tables.py` file to make tables and insert one main super user.
+- After that run `main.py` file to turn on Project.
+- After that login into Super user and go to `Add User` tab and upload `employee_data_sample.xlsx` file.
+- After adding neccesary employees you good to go.
