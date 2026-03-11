@@ -263,4 +263,4 @@ async def upload_code(
 
 
 if __name__ == '__main__':
-    uvicorn.run("main:app",port=1111, host="172.27.131.168", reload=True)
+    uvicorn.run("main:app",port=1111, host="localhost", reload=True)
